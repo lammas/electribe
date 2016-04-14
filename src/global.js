@@ -5,6 +5,7 @@ var Format = require('bin-format');
 var Const = require('./constants');
 var Utils = require('./utils');
 var Enum = require('./enumparser');
+var MappedList = require('./mappedlist');
 
 var EnabledFlag = Enum.uint8({
 	DISABLED: 0,
@@ -75,86 +76,74 @@ var GlobalParametersFlagsFormat = new Format()
 	.uint8('value', GlobalParametersFlags);
 
 
-var MidiChannelTypeName = [
-	'keyboard1',
-	'keyboard2',
-	'drum'
-];
-var MidiChannels = new Format();
-for (var i=0; i<Const.NUM_MIDI_CHANNELS; i++) {
-	var name = i<MidiChannelTypeName.length ? MidiChannelTypeName[i] : ('channel' + i)
-	MidiChannels.uint8(name);
-}
+var MidiChannels = MappedList.uint8(
+	[
+		'keyboard1',
+		'keyboard2',
+		'drum'
+	],
+	Const.NUM_MIDI_CHANNELS,
+	'channel');
 
+var PartNoteNumbers = MappedList.uint8(
+	[
+		'Drum1',
+		'Drum2',
+		'Drum3',
+		'Drum4',
+		'Drum5',
+		'Drum6a',
+		'Drum6b',
+		'Drum7a',
+		'Drum7b',
+		'Stretch1',
+		'Stretch2',
+		'Slice',
+		'AudioIn'
+	],
+	Const.NUM_PART_NOTE_NUMBERS,
+	'part');
 
-var PartNoteNumberName = [
-	'Drum1',
-	'Drum2',
-	'Drum3',
-	'Drum4',
-	'Drum5',
-	'Drum6a',
-	'Drum6b',
-	'Drum7a',
-	'Drum7b',
-	'Stretch1',
-	'Stretch2',
-	'Slice',
-	'AudioIn'
-];
-var PartNoteNumbers = new Format();
-for (var i=0; i<Const.NUM_PART_NOTE_NUMBERS; i++) {
-	var name = i<PartNoteNumberName.length ? PartNoteNumberName[i] : ('part' + i)
-	PartNoteNumbers.uint8(name);
-}
+var MidiControlChangeAssignments = MappedList.uint8(
+	[
+		'MOD_SPEED',
+		'MOD_DEPTH',
+		'MOD_TYPE',
+		'MOD_DEST',
+		'MOD_BPMSYNC',
+		'FILTER_CUTOFF',
+		'FILTER_RESONANCE',
+		'FILTER_EGINT',
+		'FILTER_TYPE',
+		'GLIDE',
+		'PAN',
+		'EG_TIME',
+		'LEVEL',
+		'START_POINT',
+		'AMP_EG',
+		'ROLL',
+		'REVERSE',
+		'EFFECT_SEND',
+		'EFFECT_SELECT',
+		'PART_MOTION_SEQ',
+		'FX1_TYPE',
+		'FX1_EDIT1',
+		'FX1_EDIT2',
+		'FX1_MOTION_SEQ',
+		'FX2_TYPE',
+		'FX2_EDIT1',
+		'FX2_EDIT2',
+		'FX2_MOTION_SEQ',
+		'FX3_TYPE',
+		'FX3_EDIT1',
+		'FX3_EDIT2',
+		'FX3_MOTION_SEQ',
+		'FX_CHAIN',
+	],
+	Const.NUM_MIDI_CONTROL_CHANGE_ASSIGNMENTS
+);
 
-var MidiControlChangeAssignment = [
-	'MOD_SPEED',
-	'MOD_DEPTH',
-	'MOD_TYPE',
-	'MOD_DEST',
-	'MOD_BPMSYNC',
-	'FILTER_CUTOFF',
-	'FILTER_RESONANCE',
-	'FILTER_EGINT',
-	'FILTER_TYPE',
-	'GLIDE',
-	'PAN',
-	'EG_TIME',
-	'LEVEL',
-	'START_POINT',
-	'AMP_EG',
-	'ROLL',
-	'REVERSE',
-	'EFFECT_SEND',
-	'EFFECT_SELECT',
-	'PART_MOTION_SEQ',
-	'FX1_TYPE',
-	'FX1_EDIT1',
-	'FX1_EDIT2',
-	'FX1_MOTION_SEQ',
-	'FX2_TYPE',
-	'FX2_EDIT1',
-	'FX2_EDIT2',
-	'FX2_MOTION_SEQ',
-	'FX3_TYPE',
-	'FX3_EDIT1',
-	'FX3_EDIT2',
-	'FX3_MOTION_SEQ',
-	'FX_CHAIN',
-];
-var MidiControlChangeAssignments = new Format();
-for (var i=0; i<Const.NUM_MIDI_CONTROL_CHANGE_ASSIGNMENTS; i++) {
-	var name = i<MidiControlChangeAssignment.length ? MidiControlChangeAssignment[i] : ('assignment' + i)
-	MidiControlChangeAssignments.uint8(name);
-}
-
-
-var PatternSetParameters = new Format();
-for (var i=0; i<Const.NUM_PATTERN_SET_PARAMETERS; i++) {
-	PatternSetParameters.uint8('pattern' + i);
-}
-
+var PatternSetParameters = MappedList.uint8([], Const.NUM_PATTERN_SET_PARAMETERS, 'pattern');
 
 var GlobalParameters = new Format()
 	.nest('memoryProtectEnabled', EnabledFlag)
