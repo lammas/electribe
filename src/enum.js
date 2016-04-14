@@ -4,7 +4,7 @@ function enumerate(values) {
 	var C = class {
 		constructor(value) {
 			if (!this.isValid(value))
-				throw new Error('Invalid value: ' + v + ' (' + typeof(v) + ')');
+				throw new Error('Invalid value: ' + value + ' (' + typeof(value) + ')');
 			this._value = value;
 		}
 
