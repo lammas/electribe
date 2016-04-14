@@ -8,6 +8,8 @@ var Format = require('bin-format');
 // var Enum = require('./src/enumparser');
 var GlobalParameters = require('./src/global');
 
+console.log('GlobalParameters length: ', GlobalParameters.length());
+
 
 var ESXFile = new Format()
 	.buffer('header', 32)
@@ -33,8 +35,8 @@ var ESXFile = new Format()
 	.buffer('sampledata', 'eof');
 
 
-// var TESTFILE = '../ESX-Factory-Data.esx';
-var TESTFILE = '../saved.esx';
+// var TESTFILE = 'data/ESX-Factory-Data.esx';
+var TESTFILE = 'data/saved.esx';
 fs.readFile(TESTFILE, function(err, buffer) {
 	if (err)
 		throw err;

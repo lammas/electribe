@@ -17,6 +17,6 @@
   "author": "lammas",
   "license": "MIT",
   "dependencies": {
-    "bin-format": "^1.1.0"
+    "bin-format": "^1.2.0"
   }
 }
