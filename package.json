@@ -2,6 +2,10 @@
   "name": "electribe",
   "version": "1.0.0",
   "description": "Electribe ESX file format toolkit for Node.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lammas/electribe.git"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,6 +17,6 @@
   "author": "lammas",
   "license": "MIT",
   "dependencies": {
-    "bin-format": "^1.1.0",
+    "bin-format": "^1.1.0"
   }
 }
