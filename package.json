@@ -1,0 +1,18 @@
+{
+  "name": "electribe",
+  "version": "1.0.0",
+  "description": "Electribe ESX file format toolkit for Node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electribe",
+    "esx"
+  ],
+  "author": "lammas",
+  "license": "MIT",
+  "dependencies": {
+    "bin-format": "^1.1.0",
+  }
+}
