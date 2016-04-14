@@ -8,17 +8,16 @@ var Format = require('bin-format');
 var GlobalParameters = require('./src/global');
 var Pattern = require('./src/pattern');
 
-console.log('GlobalParameters length: ', GlobalParameters.length());
-
+// TODO: make tests
+console.log('GlobalParameters length: ', GlobalParameters.length(), 192);
+console.log('Pattern length: ', Pattern.length(), 4280);
 
 var ESXFile = new Format()
 	.buffer('header', 32)
 	.nest('global', GlobalParameters)
 	.buffer('_unknown0', 288) // unknown, all 0x00
-	// .list('patterns', 256, Pattern)
-	.list('patterns', 1, Pattern)
+	.list('patterns', 256, Pattern)
 /*
-	.buffer('patterns', 256 * 4280)
 	.buffer('_unknown1', 148992)
 	.buffer('songs', 64 * 528)
 	.buffer('songevents', 20000 * 8)
