@@ -174,10 +174,7 @@ class Tempo {
 
 var Pattern = new Format()
 	.buffer('name', 8, ESXString)
-	// |    8    | Tempo (MSB)                  | 20.0~300.0         iiiiiiiii 20~300 |
-	// |    9    | Tempo (LSB)                  | iiiiiiiii00ffff         ffff 0~9    |
-	.uint16BE('tempo', Tempo) // FIXME: incorrect, see TABLE5
-
+	.uint16BE('tempo', Tempo)
 	.uint8('swing')
 	.uint8('flags', PatternFlags)
 	.uint8('fxchain')
