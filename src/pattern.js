@@ -3,16 +3,7 @@
 var Format = require('bin-format');
 var Utils = require('./utils');
 var Const = require('./constants');
-
-class ESXString {
-	constructor(value) {
-		this.value = value.toString();
-	}
-
-	serialize() {
-		return new Buffer(this.value, 'binary');
-	}
-}
+var ESXString = require('./string');
 
 class PatternFlags {
 	constructor(value) {
