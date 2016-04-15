@@ -69,11 +69,12 @@ class DrumFlags1 {
 	}
 }
 
+// Reference: TABLE23
 class DrumSequenceSteps {
 	constructor(data) {
 		this.data = data;
 		this.steps = [];
-		for (var i = 15; i >= 0; i--) {
+		for (var i = 7; i >= 0; i--) {
 			this.steps.push( data & (1 << i) ? 1 : 0 );
 		}
 	}
@@ -84,7 +85,7 @@ class DrumSequenceSteps {
 }
 
 var DrumSequenceBar = new Format()
-	.uint16BE('steps', DrumSequenceSteps); // TODO: test endianness
+	.uint8('steps', DrumSequenceSteps);
 
 var DrumPart = new Format()
 	// .buffer('data', Const.CHUNKSIZE_PARTS_DRUM);
@@ -109,12 +110,13 @@ var DrumPart = new Format()
 	.uint8('modspeed')
 	.uint8('moddepth')
 	.uint8('motionseqstatus')
-	.list('sequencedata', 8, DrumSequenceBar)
+	.list('sequencedata', Const.NUM_SEQUENCE_DATA, DrumSequenceBar)
 	// .buffer('sequencedata', Const.NUM_SEQUENCE_DATA)
 	;
 	// the sequencedata is 16 bytes
 	// each drum part has 8 * 16 (128) steps
 	// which would imply that every bit represents one on/off value
+	// TODO: where is the number of bars (Pattern > Length on ESX)
 
 var KeyboardParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
@@ -144,9 +146,38 @@ var PatternParts = new Format()
 	.list('motionparam', Const.NUM_PARAMETERS_MOTION, MotionParam)
 	;
 
+class Tempo {
+	constructor(value) {
+		this.value = value;
+
+		// iiiiiiii i000ffff
+		var tempoWhole = Utils.unpackInt(value, 9, 7);
+		var tempoDecimal = Utils.unpackInt(value, 4, 0);
+
+		// valid tempoDecimal values are between 0-9
+		if (tempoDecimal > 9 || tempoDecimal < 0)
+			tempoDecimal = 0;
+
+		// valid tempoWhole values are between 20-300
+		if (tempoWhole < 20)
+			tempoWhole = 20;
+		if (tempoWhole > 300)
+			tempoWhole = 300;
+
+		this.tempo = parseFloat('' + tempoWhole + '.' + tempoDecimal);
+	}
+
+	serialize() {
+		return this.value;
+	}
+}
+
 var Pattern = new Format()
 	.buffer('name', 8, ESXString)
-	.uint16LE('tempo')
+	// |    8    | Tempo (MSB)                  | 20.0~300.0         iiiiiiiii 20~300 |
+	// |    9    | Tempo (LSB)                  | iiiiiiiii00ffff         ffff 0~9    |
+	.uint16BE('tempo', Tempo) // FIXME: incorrect, see TABLE5
+
 	.uint8('swing')
 	.uint8('flags', PatternFlags)
 	.uint8('fxchain')
