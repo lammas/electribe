@@ -41,7 +41,6 @@ var TESTFILE = 'data/saved.esx';
 fs.readFile(TESTFILE, function(err, buffer) {
 	if (err)
 		throw err;
-	console.log('Got data');
 	var result = ESXFile.parse(buffer);
 	console.log('Parsing complete:');
 	console.log(require('util').inspect(result, { depth: null }));

@@ -69,6 +69,23 @@ class DrumFlags1 {
 	}
 }
 
+class DrumSequenceSteps {
+	constructor(data) {
+		this.data = data;
+		this.steps = [];
+		for (var i = 15; i >= 0; i--) {
+			this.steps.push( data & (1 << i) ? 1 : 0 );
+		}
+	}
+
+	serialize() {
+		return data;
+	}
+}
+
+var DrumSequenceBar = new Format()
+	.uint16BE('steps', DrumSequenceSteps); // TODO: test endianness
+
 var DrumPart = new Format()
 	// .buffer('data', Const.CHUNKSIZE_PARTS_DRUM);
 	.uint16BE('samplepointer')
@@ -92,7 +109,9 @@ var DrumPart = new Format()
 	.uint8('modspeed')
 	.uint8('moddepth')
 	.uint8('motionseqstatus')
-	.buffer('sequencedata', Const.NUM_SEQUENCE_DATA);
+	.list('sequencedata', 8, DrumSequenceBar)
+	// .buffer('sequencedata', Const.NUM_SEQUENCE_DATA)
+	;
 	// the sequencedata is 16 bytes
 	// each drum part has 8 * 16 (128) steps
 	// which would imply that every bit represents one on/off value
