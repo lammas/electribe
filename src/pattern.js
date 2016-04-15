@@ -69,7 +69,7 @@ class DrumFlags1 {
 	}
 }
 
-var DrumParts = new Format()
+var DrumPart = new Format()
 	// .buffer('data', Const.CHUNKSIZE_PARTS_DRUM);
 	.uint16BE('samplepointer')
 	.uint8('slicenumber')
@@ -93,6 +93,9 @@ var DrumParts = new Format()
 	.uint8('moddepth')
 	.uint8('motionseqstatus')
 	.buffer('sequencedata', Const.NUM_SEQUENCE_DATA);
+	// the sequencedata is 16 bytes
+	// each drum part has 8 * 16 (128) steps
+	// which would imply that every bit represents one on/off value
 
 var KeyboardParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
@@ -113,7 +116,7 @@ var MotionParam = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARAMETERS_MOTION);
 
 var PatternParts = new Format()
-	.list('drum', Const.NUM_PARTS_DRUM, DrumParts)
+	.list('drum', Const.NUM_PARTS_DRUM, DrumPart)
 	.list('keyboard', Const.NUM_PARTS_KEYBOARD, KeyboardParts)
 	.list('stretchslice', Const.NUM_PARTS_STRETCHSLICE, StretchSliceParts)
 	.list('audioin', Const.NUM_PARTS_AUDIOIN, AudioInParts)
