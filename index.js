@@ -16,6 +16,7 @@ var ESXFile = new Format()
 	.buffer('header', 32)
 	.nest('global', GlobalParameters)
 	.buffer('_unknown0', 288) // unknown, all 0x00
+	// .list('patterns', 1, Pattern)
 	.list('patterns', 256, Pattern)
 /*
 	.buffer('_unknown1', 148992)
