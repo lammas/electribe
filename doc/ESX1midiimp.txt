@@ -1,0 +1,3210 @@
+/**********************************************************************
+ * From https://www.korg.de/uploads/tx_softwarecenter/ESX1midiimp.txt *
+ **********************************************************************/
+
+
+
+         KORG ESX-1 MIDI IMPLEMENTATION              Version 1.1 (Sep.09.'03)
+
+
+1.TRANSMITTED DATA
+
+
+1-1 CHANNEL MESSAGES            [H]:Hex,  [D]:Decimal
++--------+----------+----------+-------------------------------------------- 
++-----+
+| Status |  Second  |  Third   |           Description 
+| ENA |
+|   [H]  | [H] [D]  | [H] [D]  | 
+|     |
++--------+----------+----------+-------------------------------------------- 
++-----+
+|   8n   | kk  (kk) | 40  (64) | Note Off 
+|  N  |
+|   9n   | kk  (kk) | vv  (vv) | Note On     vv=1~127 
+|  N  |
+|   Bn   | 00  (00) | mm  (mm) | Program Bank Select(MSB) 
+[NOTE1]|  P  |
+|   Bn   | 06  (06) | dm  (dm) | Data Entry(MSB) 
+[TABLE1]|  C  |
+|   Bn   | 20  (32) | bb  (bb) | Program Bank Select(LSB) 
+[NOTE1]|  P  |
+|   Bn   | 26  (38) | dl  (dl) | Data Entry(LSB) 
+[TABLE1]|  C  |
+|   Bn   | 62  (98) | nl  (nl) | NRPN LSB 
+[TABLE1]|  C  |
+|   Bn   | 63  (99) | nm  (nm) | NRPN MSB 
+[TABLE1]|  C  |
+|   Bn   | cc  (cc) | vv  (vv) | Panel Control 
+[TABLE2]|  C  |
+|   Cn   | pp  (pp) | --   --  | Program Change 
+[NOTE1]|  P  |
++--------+----------+----------+-------------------------------------------- 
++-----+
+
+  n  : MIDI Channel (0~15)
+  vv : Value
+  cc : Control Number 01~05,07~31,33~37,39~95
+
+ENA = P : Enabled when Program MIDI Filter is "o"
+       C : Enabled when Control MIDI Filter is "o"
+       E : Enabled when Exclusive MIDI Filter is "o"
+       N : Enabled when Note MIDI Filter is "o"
+
+
+1-2 SYSTEM COMMON MESSAGES
++--------+--------+-------+-------------------------------------------------+
+| Status | Second | Third |           Description                           |
+|   [H]  |   [H]  |  [H]  |                                                 |
++--------+--------+-------+-------------------------------------------------+
+|   F2   |   pp   |  pp   |  Song Position Pointer                    *1,*2 |
+|   F3   |   ss   |  --   |  Song Select  ss : Song No. = 0~63           *3 |
++--------+--------+-------+-------------------------------------------------+
+
+*1  This message is transmitted when in Song mode and the "Clock" is set to 
+"INT".
+*2  This message isn't transmitted when Song Position exceeds the range of 
+Song Position Pointer.
+*3  This message is transmitted when in Song mode.
+
+
+1-3 SYSTEM REALTIME MESSAGES
++--------+---------------------------------------------+
+| Status |           Description                       |
+|   [H]  |                                             |
++--------+---------------------------------------------+
+|   F8   | Timing Clock                              * |
+|   FA   | Start                                     * |
+|   FB   | Continue                                  * |
+|   FC   | Stop                                      * |
+|   FE   | Active Sensing                              |
++--------+---------------------------------------------+
+
+  * :Transmitted when
+         the "Clock" is set to "INT".
+         the "Clock" is set to "AUTO" and Timeing Clock Message isn't received.
+
+
+1-4 UNIVERSAL SYSTEM EXCLUSIVE MESSAGES
+
+(1)  DEVICE INQUIRY REPLY
++--------+---------------------------------------------+
+|  Byte  |           Description                       |
+|   [H]  |                                             |
++--------+---------------------------------------------+
+|   F0   | Exclusive Status                            |
+|   7E   | Non Realtime Message                        |
+|   0g   | Global MIDI Channel  ( Device ID )        * |
+|   06   | Inquiry Message                             |
+|   02   | Identity reply                              |
+|   42   | KORG ID              ( Manufacturers ID )   |
+|   71   | ESX-1 ID             ( Family ID   (LSB))   |
+|   00   |                      ( Family ID   (MSB))   |
+|   00   |                      ( Member ID   (LSB))   |
+|   00   |                      ( Member ID   (MSB))   |
+|   xx   |                      ( Minor Ver.  (LSB))   |
+|   xx   |                      ( Minor Ver.  (MSB))   |
+|   xx   |                      ( Major Ver.  (LSB))   |
+|   xx   |                      ( Major Ver.  (MSB))   |
+|   F7   | End of Exclusive                            |
++--------+---------------------------------------------+
+
+   This message is transmitted whenever a INQUIRY MESSAGE REQUEST is received.
+
+  * 0g : Global MIDI Channel = Keyboard Part1 MIDI Channel
+
+
+1-5 SYSTEM EXCLUSIVE MESSAGES
++-------------+------------------------------------------------+---+---+---+
+| Function ID |                                                | R | D | E |
+|    [H]      |                                                |   |   |   |
++-------------+------------------------------------------------+---+---+---+
+|     40      | CURRENT PATTERN DATA DUMP                      | o |   |   |
+|     58      | CURRENT SONG DATA DUMP                         | o |   |   |
+|     4C      | PATTERN DATA DUMP                              | o | o |   |
+|     57      | ALL SONG DATA DUMP                             | o | o |   |
+|     51      | GLOBAL DATA DUMP                               | o | o |   |
+|     26      | DATA FORMAT ERROR                              |   |   | o |
+|     23      | DATA LOAD COMPLETED                            |   |   | o |
+|     24      | DATA LOAD ERROR                                |   |   | o |
+|     21      | WRITE COMPLETED                                |   |   | o |
+|     22      | WRITE ERROR                                    |   |   | o |
++-------------+------------------------------------------------+---+---+---+
+
+   Transmitted when
+         R : Request message is received
+         D : Data dump from MIDI dump page
+         E : Exclusive message is received
+
+   All messages can always be transmitted when in MIDI dump page.
+   (It doesn't respond to "MIDI Filter E" parameter.)
+
+
+2.RECOGNIZED RECEIVE DATA
+
+
+2-1 CHANNEL MESSAGES
++--------+----------+----------+-------------------------------------------- 
++-----+
+| Status |  Second  |  Third   |           Description 
+| ENA |
+|  [H]   | [H] [D]  | [H] [D]  | 
+|     |
++--------+----------+----------+-------------------------------------------- 
++-----+
+|   8n   | kk  (kk) | vv  (vv) | Note Off    vv=0~127 
+|  N  |
+|   9n   | kk  (kk) | 00  (00) | Note Off 
+|  N  |
+|   9n   | kk  (kk) | vv  (vv) | Note On     vv=1~127 
+|  N  |
+|   Bn   | 00  (00) | mm  (mm) | Program Bank Select(MSB) 
+[NOTE1]|  P  |
+|   Bn   | 06  (06) | dm  (dm) | Data Entry(MSB) 
+[TABLE1]|  C  |
+|   Bn   | 20  (32) | bb  (bb) | Program Bank Select(LSB) 
+[NOTE1]|  P  |
+|   Bn   | 26  (38) | dl  (dl) | Data Entry(LSB) 
+[TABLE1]|  C  |
+|   Bn   | 62  (98) | nl  (nl) | NRPN LSB 
+[TABLE1]|  C  |
+|   Bn   | 63  (99) | nm  (nm) | NRPN MSB 
+[TABLE1]|  C  |
+|   Bn   | 79 (121) | 00  (00) | Reset All Controllers 
+|  A  |
+|   Bn   | 7B (123) | 00  (00) | All Note Off                            *1 
+|  A  |
+|   Bn   | cc  (cc) | vv  (vv) | Panel Control                   *2 
+[TABLE2]|  C  |
+|   Cn   | pp  (pp) | --   --  | Program Change 
+[NOTE1]|  P  |
+|   En   | bb  (bb) | bb  (bb) | Pitch Bender Change 
+|  C  |
++--------+----------+----------+-------------------------------------------- 
++-----+
+
+  n : MIDI Channel No.(0~15)
+
+  *1 : This message is effective only in Keyboard Part, and isn't effective 
+in Drum Part.
+  *2 : cc = Control Number 01~05,07~31,33~37,39~95
+
+ENA = A : Always Enabled
+       P : Enabled when Program MIDI Filter is "o"
+       C : Enabled when Control MIDI Filter is "o"
+       E : Enabled when Exclusive MIDI Filter is "o"
+       N : Enabled when Note MIDI Filter is "o"
+
+
+2-2 SYSTEM REALTIME MESSAGES
++--------+---------------------------------------------+
+| Status |           Description                       |
+|   [H]  |                                             |
++--------+---------------------------------------------+
+|   F8   | Timing Clock                              * |
+|   FA   | Start                                     * |
+|   FB   | Continue                                  * |
+|   FC   | Stop                                      * |
+|   FE   | Active Sensing                              |
++--------+---------------------------------------------+
+
+  * :This message is recognized when the "Clock" is set to "EXT" or "Auto".
+
+
+2-3 UNIVERSAL SYSTEM EXCLUSIVE MESSAGE (NON REALTIME)
+
+(1) DEVICE INQUIRY MESSAGE REQUEST
++--------+---------------------------------------------+
+|  Byte  |           Description                       |
+|   [H]  |                                             |
++--------+---------------------------------------------+
+|   F0   | Exclusive Status                            |
+|   7E   | Non Realtime Message                        |
+|   cc   | MIDI Channel                                |
+|   06   | Inquiry Message                             |
+|   01   | Inquiry Request                             |
+|   F7   | End of Exclusive                            |
++--------+---------------------------------------------+
+
+   When receive this message and transmits Inquiry Reply Message.
+         cc = 00 ~ 0F : Global Channel
+              7F      : Any Channel
+
+   This message can always be received when in MIDI dump page.
+   (It doesn't respond to "MIDI Filter E" parameter.)
+
+
+2-4 SYSTEM EXCLUSIVE MESSAGE
++-------------+-----------------------------------------------+
+| Function ID |               Function                        |
+|    [H]      |                                               |
++-------------+-----------------------------------------------+
+|     10      | CURRENT PATTERN DATA DUMP REQUEST             |
+|     1C      | PATTERN DATA DUMP REQUEST                     |
+|     0A      | CURRENT SONG DATA DUMP REQUEST                |
+|     0B      | ALL SONG DATA DUMP REQUEST                    |
+|     0E      | GLOBAL DATA DUMP REQUEST                      |
+|     11      | PATTERN WRITE REQUEST                         |
+|     1A      | SONG WRITE REQUEST                            |
+|     40      | CURRENT PATTERN DATA DUMP                     |
+|     4C      | PATTERN DATA DUMP                             |
+|     51      | GLOBAL DATA DUMP                              |
+|     58      | CURRENT SONG DATA DUMP                        |
+|     57      | ALL SONG DATA DUMP                            |
++-------------+-----------------------------------------------+
+
+   All messages are received when Sequencer is not running.
+
+   All messages can always be received when in MIDI dump page.
+   (It doesn't respond to "MIDI Filter E" parameter.)
+
+
+MIDI EXCLUSIVE FORMAT   (R:Receive, T:Transmit)
+
+(1) CURRENT PATTERN DATA DUMP REQUEST                              R
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0001 0000 (10) | CURRENT PATTERN DATA DUMP REQUEST      10H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, the CURRENT PATTERN DATA DUMP(Function:40h)
+  message will be transmitted.
+
+
+(2) PATTERN DATA DUMP REQUEST                                      R
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0001 1100 (1C) | PATTERN DATA DUMP REQUEST              1CH       |
+| 0000 00bb (0b) | BANK(0:A/1:B/2:C/3:D)                            |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+Pattern BANK is 64patterns block.
+0:A01~A64, 1:B01~B64, 2:C01~C64, 3:D01~D64
+
+  When this message is received, the PATTERN DATA DUMP(Function:4Ch)
+  message will be transmitted.
+
+
+(3) CURRENT SONG DATA DUMP REQUEST                                 R
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0000 1010 (0A) | CURRENT SONG DATA DUMP REQUEST         0AH       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, the CURRENT SONG DATA DUMP
+  (Function:58h) message will be transmitted.
+
+
+(4) ALL SONG DATA DUMP REQUEST                                     R
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0000 1011 (0B) | ALL SONG DATA DUMP REQUEST             0BH       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, the ALL SONG DATA DUMP(Function:57h)
+  message will be transmitted.
+
+
+(5) GLOBAL DATA DUMP REQUEST                                       R
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0000 1111 (0E) | GLOBAL DATA DUMP REQUEST               0EH       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, the GLOBAL DATA DUMP(Function:51h)
+  message will be transmitted.
+
+
+(6) PATTERN WRITE REQUEST                                          R
++----------------+--------------------------------------------------+
+|     Byte       |            Description                           |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0001 0001 (11) | PATTERN WRITE REQUEST                  11H       |
+| 0000 000b (0b) | Destination Pattern Number(0:A01~B64,1:C01~D64)  |
+| 0ppp pppp (pp) | Destination Pattern Number                       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a WRITE COMPLETED(Function:21h) message
+  or a WRITE ERROR(Function:22h) message will be transmitted.
+
+
+(7) SONG WRITE REQUEST                                             R
++----------------+--------------------------------------------------+
+|     Byte       |            Description                           |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0001 1010 (1A) | SONG WRITE REQUEST                     1AH       |
+| 00ss ssss (ss) | Destination Song No(0~63)                        |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a WRITE COMPLETED(Function:21h) message
+  or a WRITE ERROR(Function:22h) message will be transmitted.
+
+
+(8) CURRENT PATTERN DATA DUMP                                    R/T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0100 0000 (40) | CURRENT PATTERN DATA DUMP              40H       |
+| 0ddd dddd (dd) | Data                              [NOTE2][TABLE4]|
+|     :          |  :                                               |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a DATA LOAD COMPLETED(Function:23h)
+  message or a DATA LOAD ERROR(Function:24h) message will be transmitted.
+
+
+(9) PATTERN DATA DUMP                                            R/T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0100 1100 (4C) | PATTERN DATA DUMP                      4CH       |
+| 0000 00bb (0b) | BANK(0:A/1:B/2:C/3:D)                            |
+| 0ddd dddd (dd) | Data                              [NOTE2][TABLE3]|
+|     :          |  :                                               |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+Pattern BANK is 64patterns block.
+0:A01~A64, 1:B01~B64, 2:C01~C64, 3:D01~D64
+
+  When this message is received, a DATA LOAD COMPLETED(Function:23h)
+  message or a DATA LOAD ERROR(Function:24h) message will be transmitted.
+
+
+(10) GLOBAL DATA DUMP                                            R/T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0101 0001 (51) | GLOBAL DATA DUMP                       51H       |
+| 0ddd dddd (dd) | Data                             [NOTE2][TABLE13]|
+|     :          |  :                                               |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a DATA LOAD COMPLETED(Function:23h)
+  message or a DATA LOAD ERROR(Function:24h) message will be transmitted.
+
+
+(11) CURRENT SONG DATA DUMP                                      R/T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0101 1000 (58) | CURRENT SONG DATA DUMP                 58H       |
+| 0ddd dddd (dd) | Data                             [NOTE2][TABLE14]|
+|     :          |  :                                               |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a DATA LOAD COMPLETED(Function:23h)
+  message or a DATA LOAD ERROR(Function:24h) message will be transmitted.
+
+
+(12) ALL SONG DATA DUMP                                          R/T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0101 0111 (57) | ALL SONG DATA DUMP                     57H       |
+| 0ddd dddd (dd) | Data                             [NOTE2][TABLE15]|
+|     :          |  :                                               |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+  When this message is received, a DATA LOAD COMPLETED(Function:23h)
+  message or a DATA LOAD ERROR(Function:24h) message will be transmitted.
+
+
+(13) DATA FORMAT ERROR                                             T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0010 0110 (26) | DATA FORMAT ERROR                      26H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+
+(14) DATA LOAD COMPLETED                                           T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0010 0011 (23) | DATA LOAD COMPLETED                    23H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+
+(15) DATA LOAD ERROR                                               T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0010 0100 (24) | DATA LOAD ERROR                        24H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+
+(16) WRITE COMPLETED                                               T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0010 0001 (21) | WRITE COMPLETED                        21H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+
+(17) WRITE ERROR                                                   T
++----------------+--------------------------------------------------+
+|     Byte       |             Description                          |
++----------------+--------------------------------------------------+
+| F0,42,3g,71    | EXCLUSIVE HEADER                                 |
+| 0010 0010 (22) | WRITE ERROR                            22H       |
+| 1111 0111 (F7) | EOX                                              |
++----------------+--------------------------------------------------+
+
+
+NOTE1 : Pattern number
+         mm,bb,pp = 00,00,00~3F : A01~64
+                    00,00,40~7F : B01~64
+                    00,01,00~3F : C01~64
+                    00,01,40~7F : D01~64
+
+
+NOTE2 : The dump data conversion
+
+     DATA ( 1set = 8bit x 7Byte )
+     b7     ~      b0   b7     ~      b0   b7   ~~    b0   b7     ~      b0
+    +-+-+-+-+-+-+-+-+  +-+-+-+-+-+-+-+-+  +-+-+-~~-+-+-+  +-+-+-+-+-+-+-+-+
+    | | | | | | | | |  | | | | | | | | |  | | |    | | |  | | | | | | | | |
+    +-+-+-+-+-+-+-+-+  +-+-+-+-+-+-+-+-+  +-+-+-~~-+-+-+  +-+-+-+-+-+-+-+-+
+          7n+0               7n+1          7n+2 ~~ 7n+5         7n+6
+
+     MIDI DATA ( 1set = 7bit x 8Byte )
+       b7b7b7b7b7b7b7     b6    ~     b0     b6 ~~    b0     b6    ~     b0
+    +-+-+-+-+-+-+-+-+  +-+-+-+-+-+-+-+-+  +-+-+-~~-+-+-+  +-+-+-+-+-+-+-+-+
+    |0| | | | | | | |  |0| | | | | | | |  |0| |    | | |  |0| | | | | | | |
+    +-+-+-+-+-+-+-+-+  +-+-+-+-+-+-+-+-+  +-+-+-~~-+-+-+  +-+-+-+-+-+-+-+-+
+    7n+6,5,4,3,2,1,0         7n+0          7n+1 ~~ 7n+5         7n+6
+
+
+TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
++---------+----------------------------------+----------+------------+------ 
+------------------------+
+| nm  nl  |       Parameter                  | MIDI Ch  | Data Entry |   dd 
+(Data Entry Value) [D]  |
+| [H] [H] |                                  |          |            | 
+[D]                       |
++---------+----------------------------------+----------+------------+------ 
+------------------------+
+| 0C  00  | Drum1 Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0C  02  | Drum1 Slice No.                  | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0C  04  | Drum1 Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0C  05  | Drum1 Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0C  06  | Drum1 Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0C  07  | Drum1 Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0C  08  | Drum1 Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  09  | Drum1 Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0C  0A  | Drum1 Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0C  0B  | Drum1 Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0C  0C  | Drum1 EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0C  0D  | Drum1 Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  0E  | Drum1 Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  0F  | Drum1 Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  10  | Drum1 Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  11  | Drum1 Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0C  12  | Drum1 Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0C  13  | Drum1 Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  14  | Drum1 Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0C  15  | Drum1 Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0C  16  | Drum1 Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  17  | Drum1 Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0C  20  | Drum2 Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0C  22  | Drum2 Slice No.                  | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0C  24  | Drum2 Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0C  25  | Drum2 Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0C  26  | Drum2 Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0C  27  | Drum2 Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0C  28  | Drum2 Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  29  | Drum2 Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0C  2A  | Drum2 Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0C  2B  | Drum2 Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0C  2C  | Drum2 EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0C  2D  | Drum2 Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  2E  | Drum2 Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  2F  | Drum2 Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  30  | Drum2 Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  31  | Drum2 Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0C  32  | Drum2 Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0C  33  | Drum2 Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  34  | Drum2 Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0C  35  | Drum2 Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0C  36  | Drum2 Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  37  | Drum2 Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0C  40  | Drum3 Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0C  42  | Drum3 Slice No.                  | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0C  44  | Drum3 Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0C  45  | Drum3 Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0C  46  | Drum3 Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0C  47  | Drum3 Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0C  48  | Drum3 Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  49  | Drum3 Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0C  4A  | Drum3 Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0C  4B  | Drum3 Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0C  4C  | Drum3 EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0C  4D  | Drum3 Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  4E  | Drum3 Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  4F  | Drum3 Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  50  | Drum3 Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  51  | Drum3 Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0C  52  | Drum3 Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0C  53  | Drum3 Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  54  | Drum3 Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0C  55  | Drum3 Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0C  56  | Drum3 Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  57  | Drum3 Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0C  60  | Drum4 Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0C  62  | Drum4 Slice No.                  | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0C  64  | Drum4 Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0C  65  | Drum4 Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0C  66  | Drum4 Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0C  67  | Drum4 Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0C  68  | Drum4 Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  69  | Drum4 Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0C  6A  | Drum4 Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0C  6B  | Drum4 Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0C  6C  | Drum4 EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0C  6D  | Drum4 Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  6E  | Drum4 Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  6F  | Drum4 Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  70  | Drum4 Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  71  | Drum4 Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0C  72  | Drum4 Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0C  73  | Drum4 Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0C  74  | Drum4 Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0C  75  | Drum4 Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0C  76  | Drum4 Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0C  77  | Drum4 Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0D  00  | Drum5 Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0D  02  | Drum5 Slice No.                  | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0D  04  | Drum5 Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0D  05  | Drum5 Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0D  06  | Drum5 Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0D  07  | Drum5 Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0D  08  | Drum5 Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  09  | Drum5 Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0D  0A  | Drum5 Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0D  0B  | Drum5 Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0D  0C  | Drum5 EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0D  0D  | Drum5 Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  0E  | Drum5 Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  0F  | Drum5 Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  10  | Drum5 Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  11  | Drum5 Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0D  12  | Drum5 Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0D  13  | Drum5 Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  14  | Drum5 Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0D  15  | Drum5 Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0D  16  | Drum5 Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  17  | Drum5 Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0D  20  | Drum6A Sample                    | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0D  22  | Drum6A Slice No.                 | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0D  24  | Drum6A Pitch                     | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0D  25  | Drum6A Filter Type               | Drum     |  MSB       | 
+*T1-2                        |
+| 0D  26  | Drum6A Filter Cutoff             | Drum     |  MSB       | 
+0~127                        |
+| 0D  27  | Drum6A Filter Resonance          | Drum     |  MSB       | 
+0~127                        |
+| 0D  28  | Drum6A Filter EG Int             | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  29  | Drum6A Start Point               | Drum     |  MSB       | 
+0~127                        |
+| 0D  2A  | Drum6A Level                     | Drum     |  MSB       | 
+0~127                        |
+| 0D  2B  | Drum6A Pan                       | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0D  2C  | Drum6A EG Time                   | Drum     |  MSB       | 
+0~127                        |
+| 0D  2D  | Drum6A Amp EG                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  2E  | Drum6A Roll                      | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  2F  | Drum6A Reverse                   | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  30  | Drum6A Effect Send               | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  31  | Drum6A Effect Select             | Drum     |  MSB       | 
+*T1-3                        |
+| 0D  32  | Drum6A Modulation Type           | Drum     |  MSB       | 
+*T1-4                        |
+| 0D  33  | Drum6A Modulation Depth          | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  34  | Drum6A Modulation Speed          | Drum     |  MSB       | 
+0~127                        |
+| 0D  35  | Drum6A Modulation Destination    | Drum     |  MSB       | 
+*T1-5                        |
+| 0D  36  | Drum6A Modulation BPM Sync       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  37  | Drum6A Motion Seq Type           | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0D  40  | Drum6B Sample                    | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0D  42  | Drum6B Slice No.                 | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0D  44  | Drum6B Pitch                     | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0D  45  | Drum6B Filter Type               | Drum     |  MSB       | 
+*T1-2                        |
+| 0D  46  | Drum6B Filter Cutoff             | Drum     |  MSB       | 
+0~127                        |
+| 0D  47  | Drum6B Filter Resonance          | Drum     |  MSB       | 
+0~127                        |
+| 0D  48  | Drum6B Filter EG Int             | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  49  | Drum6B Start Point               | Drum     |  MSB       | 
+0~127                        |
+| 0D  4A  | Drum6B Level                     | Drum     |  MSB       | 
+0~127                        |
+| 0D  4B  | Drum6B Pan                       | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0D  4C  | Drum6B EG Time                   | Drum     |  MSB       | 
+0~127                        |
+| 0D  4D  | Drum6B Amp EG                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  4E  | Drum6B Roll                      | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  4F  | Drum6B Reverse                   | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  50  | Drum6B Effect Send               | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  51  | Drum6B Effect Select             | Drum     |  MSB       | 
+*T1-3                        |
+| 0D  52  | Drum6B Modulation Type           | Drum     |  MSB       | 
+*T1-4                        |
+| 0D  53  | Drum6B Modulation Depth          | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  54  | Drum6B Modulation Speed          | Drum     |  MSB       | 
+0~127                        |
+| 0D  55  | Drum6B Modulation Destination    | Drum     |  MSB       | 
+*T1-5                        |
+| 0D  56  | Drum6B Modulation BPM Sync       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  57  | Drum6B Motion Seq Type           | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0D  60  | Drum7A Sample                    | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0D  62  | Drum7A Slice No.                 | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0D  64  | Drum7A Pitch                     | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0D  65  | Drum7A Filter Type               | Drum     |  MSB       | 
+*T1-2                        |
+| 0D  66  | Drum7A Filter Cutoff             | Drum     |  MSB       | 
+0~127                        |
+| 0D  67  | Drum7A Filter Resonance          | Drum     |  MSB       | 
+0~127                        |
+| 0D  68  | Drum7A Filter EG Int             | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  69  | Drum7A Start Point               | Drum     |  MSB       | 
+0~127                        |
+| 0D  6A  | Drum7A Level                     | Drum     |  MSB       | 
+0~127                        |
+| 0D  6B  | Drum7A Pan                       | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0D  6C  | Drum7A EG Time                   | Drum     |  MSB       | 
+0~127                        |
+| 0D  6D  | Drum7A Amp EG                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  6E  | Drum7A Roll                      | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  6F  | Drum7A Reverse                   | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  70  | Drum7A Effect Send               | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  71  | Drum7A Effect Select             | Drum     |  MSB       | 
+*T1-3                        |
+| 0D  72  | Drum7A Modulation Type           | Drum     |  MSB       | 
+*T1-4                        |
+| 0D  73  | Drum7A Modulation Depth          | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0D  74  | Drum7A Modulation Speed          | Drum     |  MSB       | 
+0~127                        |
+| 0D  75  | Drum7A Modulation Destination    | Drum     |  MSB       | 
+*T1-5                        |
+| 0D  76  | Drum7A Modulation BPM Sync       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0D  77  | Drum7A Motion Seq Type           | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0E  00  | Drum7B Sample                    | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0E  02  | Drum7B Slice No.                 | Drum     |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+| 0E  04  | Drum7B Pitch                     | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0E  05  | Drum7B Filter Type               | Drum     |  MSB       | 
+*T1-2                        |
+| 0E  06  | Drum7B Filter Cutoff             | Drum     |  MSB       | 
+0~127                        |
+| 0E  07  | Drum7B Filter Resonance          | Drum     |  MSB       | 
+0~127                        |
+| 0E  08  | Drum7B Filter EG Int             | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0E  09  | Drum7B Start Point               | Drum     |  MSB       | 
+0~127                        |
+| 0E  0A  | Drum7B Level                     | Drum     |  MSB       | 
+0~127                        |
+| 0E  0B  | Drum7B Pan                       | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0E  0C  | Drum7B EG Time                   | Drum     |  MSB       | 
+0~127                        |
+| 0E  0D  | Drum7B Amp EG                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  0E  | Drum7B Roll                      | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  0F  | Drum7B Reverse                   | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  10  | Drum7B Effect Send               | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  11  | Drum7B Effect Select             | Drum     |  MSB       | 
+*T1-3                        |
+| 0E  12  | Drum7B Modulation Type           | Drum     |  MSB       | 
+*T1-4                        |
+| 0E  13  | Drum7B Modulation Depth          | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0E  14  | Drum7B Modulation Speed          | Drum     |  MSB       | 
+0~127                        |
+| 0E  15  | Drum7B Modulation Destination    | Drum     |  MSB       | 
+*T1-5                        |
+| 0E  16  | Drum7B Modulation BPM Sync       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  17  | Drum7B Motion Seq Type           | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0E  20  | Keyboard Sample                  | Keyboard |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0E  22  | Keyboard Slice No .              | Keyboard |  MSB,LSB   | 
+16383 : ALL (*T1-1)          |
+|         |                                  |          |            | 
+|
+| 0E  60  | Stretch1 Sample                  | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0E  64  | Stretch1 Pitch                   | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0E  65  | Stretch1 Filter Type             | Drum     |  MSB       | 
+*T1-2                        |
+| 0E  66  | Stretch1 Filter Cutoff           | Drum     |  MSB       | 
+0~127                        |
+| 0E  67  | Stretch1 Filter Resonance        | Drum     |  MSB       | 
+0~127                        |
+| 0E  68  | Stretch1 Filter EG Int           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0E  69  | Stretch1 Start Point             | Drum     |  MSB       | 
+0~127                        |
+| 0E  6A  | Stretch1 Level                   | Drum     |  MSB       | 
+0~127                        |
+| 0E  6B  | Stretch1 Pan                     | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0E  6C  | Stretch1 EG Time                 | Drum     |  MSB       | 
+0~127                        |
+| 0E  6D  | Stretch1 Amp EG                  | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  6E  | Stretch1 Roll                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  6F  | Stretch1 Reverse                 | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  70  | Stretch1 Effect Send             | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  71  | Stretch1 Effect Select           | Drum     |  MSB       | 
+*T1-3                        |
+| 0E  72  | Stretch1 Modulation Type         | Drum     |  MSB       | 
+*T1-4                        |
+| 0E  73  | Stretch1 Modulation Depth        | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0E  74  | Stretch1 Modulation Speed        | Drum     |  MSB       | 
+0~127                        |
+| 0E  75  | Stretch1 Modulation Destination  | Drum     |  MSB       | 
+*T1-5                        |
+| 0E  76  | Stretch1 Modulation BPM Sync     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0E  77  | Stretch1 Motion Seq Type         | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0F  00  | Stretch2 Sample                  | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0F  04  | Stretch2 Pitch                   | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0F  05  | Stretch2 Filter Type             | Drum     |  MSB       | 
+*T1-2                        |
+| 0F  06  | Stretch2 Filter Cutoff           | Drum     |  MSB       | 
+0~127                        |
+| 0F  07  | Stretch2 Filter Resonance        | Drum     |  MSB       | 
+0~127                        |
+| 0F  08  | Stretch2 Filter EG Int           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  09  | Stretch2 Start Point             | Drum     |  MSB       | 
+0~127    |
+| 0F  0A  | Stretch2 Level                   | Drum     |  MSB       | 
+0~127                        |
+| 0F  0B  | Stretch2 Pan                     | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0F  0C  | Stretch2 EG Time                 | Drum     |  MSB       | 
+0~127                        |
+| 0F  0D  | Stretch2 Amp EG                  | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  0E  | Stretch2 Roll                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  0F  | Stretch2 Reverse                 | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  10  | Stretch2 Effect Send             | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  11  | Stretch2 Effect Select           | Drum     |  MSB       | 
+*T1-3                        |
+| 0F  12  | Stretch2 Modulation Type         | Drum     |  MSB       | 
+*T1-4                        |
+| 0F  13  | Stretch2 Modulation Depth        | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  14  | Stretch2 Modulation Speed        | Drum     |  MSB       | 
+0~127                        |
+| 0F  15  | Stretch2 Modulation Destination  | Drum     |  MSB       | 
+*T1-5                        |
+| 0F  16  | Stretch2 Modulation BPM Sync     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  17  | Stretch2 Motion Seq Type         | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0F  20  | Slice Sample                     | Drum     |  MSB,LSB   | 
+16383 : Sample OFF (*T1-1)   |
+| 0F  24  | Slice Pitch                      | Drum     |  MSB       | 
+0~127 (64=equal pitch)       |
+| 0F  25  | Slice Filter Type                | Drum     |  MSB       | 
+*T1-2                        |
+| 0F  26  | Slice Filter Cutoff              | Drum     |  MSB       | 
+0~127                        |
+| 0F  27  | Slice Filter Resonance           | Drum     |  MSB       | 
+0~127                        |
+| 0F  28  | Slice Filter EG Int              | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  29  | Slice Start Point                | Drum     |  MSB       | 
+0~127                        |
+| 0F  2A  | Slice Level                      | Drum     |  MSB       | 
+0~127                        |
+| 0F  2B  | Slice Pan                        | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0F  2C  | Slice EG Time                    | Drum     |  MSB       | 
+0~127                        |
+| 0F  2D  | Slice Amp EG                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  2E  | Slice Roll                       | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  2F  | Slice Reverse                    | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  30  | Slice Effect Send                | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  31  | Slice Effect Select              | Drum     |  MSB       | 
+*T1-3                        |
+| 0F  32  | Slice Modulation Type            | Drum     |  MSB       | 
+*T1-4                        |
+| 0F  33  | Slice Modulation Depth           | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  34  | Slice Modulation Speed           | Drum     |  MSB       | 
+0~127                        |
+| 0F  35  | Slice Modulation Destination     | Drum     |  MSB       | 
+*T1-5                        |
+| 0F  36  | Slice Modulation BPM Sync        | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  37  | Slice Motion Seq Type            | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0F  45  | AudioIn Filter Type              | Drum     |  MSB       | 
+*T1-2                        |
+| 0F  46  | AudioIn Filter Cutoff            | Drum     |  MSB       | 
+0~127                        |
+| 0F  47  | AudioIn Filter Resonance         | Drum     |  MSB       | 
+0~127                    |
+| 0F  48  | AudioIn Filter EG Int            | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  4A  | AudioIn Level                    | Drum     |  MSB       | 
+0~127                        |
+| 0F  4B  | AudioIn Pan                      | Drum     |  MSB       | 
+0~127 (64=center)            |
+| 0F  4C  | AudioIn EG Time                  | Drum     |  MSB       | 
+0~127                        |
+| 0F  4D  | AudioIn Amp EG                   | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  4E  | AudioIn Roll                     | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  50  | AudioIn Effect Send              | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  51  | AudioIn Effect Select            | Drum     |  MSB       | 
+*T1-3                        |
+| 0F  52  | AudioIn Modulation Type          | Drum     |  MSB       | 
+*T1-4                        |
+| 0F  53  | AudioIn Modulation Depth         | Drum     |  MSB       | 
+0~64~127 : -63~0~63          |
+| 0F  54  | AudioIn Modulation Speed         | Drum     |  MSB       | 
+0~127                        |
+| 0F  55  | AudioIn Modulation Destination   | Drum     |  MSB       | 
+*T1-7                        |
+| 0F  56  | AudioIn Modulation BPM Sync      | Drum     |  MSB       | 
+0~63/64~127 : Off/On         |
+| 0F  57  | AudioIn Motion Seq Type          | Drum     |  MSB       | 
+*T1-6                        |
+|         |                                  |          |            | 
+|
+| 0F  60  | Accent Level                     | Global   |  MSB       | 
+0~127                        |
+| 0F  61  | Accent Motion Seq SW             | Global   |  MSB       | 
+0~42/43~127 : Off/Trig Hold  |
+| 0F  70  | Swing                            | Global   |  MSB       | 
+*T1-8                        |
+| 0F  71  | RollType                         | Global   |  MSB       | 
+*T1-9                        |
+| 0F  76  | Mute 1                           | Global   |  MSB,LSB   | 
+*T1-10                       |
+| 0F  77  | Mute 2                           | Global   |  MSB,LSB   | 
+*T1-11                       |
++---------+----------------------------------+----------+------------+------ 
+------------------------+
+
+*T1-1 : Data Entry Conversion
+           MIDI Data
+             MSB : 0MMMMMMM (0~7F), LSB : 0LLLLLLL (0~7F)
+           Data
+             00MMMMMMMLLLLLLL (0~3FFF)
+
+*T1-2 : 00~1F : LPF
+         20~3F : HPF
+         40~5F : BPF
+         60~7F : BPF+
+
+*T1-3 : 00~2A : FX1
+         2B~55 : FX2
+         56~7F : FX3
+
+*T1-4 : 00~0F : Saw
+         10~1F : Squ
+         20~2F : Tri
+         30~3F : S&H
+         40~7F : EG
+
+*T1-5 : 00~1F : PITCH
+         20~3F : CUTOFF
+         40~5F : AMP
+         60~7F : PAN
+
+*T1-6 : 00~2A : Off
+         2B~55 : Smooth
+         56~7F : Trig Hold
+
+*T1-7 : 00~3F : CUTOFF
+         40~5F : AMP
+         60~7F : PAN
+
+*T1-8 : 00~07 :  50, 50, 50, 50, 50, 51, 51, 51
+         08~0F :  51, 51, 52, 52, 52, 52, 52, 53
+         10~17 :  53, 53, 53, 53, 54, 54, 54, 54
+         18~1F :  54, 55, 55, 55, 55, 55, 56, 56
+         20~27 :  56, 56, 56, 57, 57, 57, 57, 57
+         28~2F :  58, 58, 58, 58, 58, 59, 59, 59
+         30~37 :  59, 59, 60, 60, 60, 60, 60, 61
+         38~3F :  61, 61, 61, 61, 62, 62, 62, 62
+         40~47 :  62, 63, 63, 63, 63, 63, 64, 64
+         48~4F :  64, 64, 64, 65, 65, 65, 65, 65
+         50~57 :  66, 66, 66, 66, 66, 67, 67, 67
+         58~5F :  67, 67, 68, 68, 68, 68, 68, 69
+         60~67 :  69, 69, 69, 69, 70, 70, 70, 70
+         68~6F :  70, 71, 71, 71, 71, 71, 72, 72
+         70~77 :  72, 72, 72, 73, 73, 73, 73, 73
+         78~7F :  74, 74, 74, 74, 74, 75, 75, 75
+
+*T1-9 : 00~2A : 2
+         2B~55 : 3
+         56~7F : 4
+
+*T1-10 : MSB   : Bit0=1 SoloSts
+          LSB   : Bit5(AudioIn)=1       : Mute
+                  Bit4(Slice)=1         : Mute
+                  Bit3~2(Stretch2~1)=1  : Mute
+                  Bit1~0(Keyboard2~1)=1 : Mute
+
+*T1-11 : MSB   : Bit1~0(P7B~P7A)=1     : Mute
+          LSB   : Bit6~0(P6B~P1)=1      : Mute
+
+
+TABLE2 : Panel Knob & Switch Control (assignable)
++--------------------+----------------+-----------------------+----------------+
+|                    | Paramete 
+r      | Value                 | Default CC No. |
+|                    |                |  [D]                  |  [D] 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| MODULATION         | Speed          | 0~127                 | 89 
+|
+|                    | Depth          | 0~64~127 : -63~0~63   | 90 
+|
+|                    | Type           | *T1-4                 | 87 
+|
+|                    | Dest           | *T1-5                 | 88 
+|
+|                    | BPM Sync       | 0~63/64~127 : Off/On  | 82 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| FILTER             | Cutoff         | 0~127                 | 74 
+|
+|                    | Resonance      | 0~127                 | 71 
+|
+|                    | EG Int         | 0~64~127 : -63~0~63   | 79 
+|
+|                    | Type           | *T1-2                 | 83 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| Part Common        | Glide          | 0~127 : Off,1~127     |  5 
+|
+|                    | Pan            | 0~127 (64=center)     | 10 
+|
+|                    | EG Time        | 0~127                 | 75 
+|
+|                    | Level          | 0~127                 |  7 
+|
+|                    | Start Point    | 0~127                 | 18 
+|
+|                    | Amp EG         | 0~63/64~127 : Off/On  | 86 
+|
+|                    | Roll           | 0~63/64~127 : Off/On  | 85 
+|
+|                    | Reverse        | 0~63/64~127 : Off/On  | 19 
+|
+|                    | Fx Send        | 0~63/64~127 : Off/On  | 91 
+|
+|                    | Fx Select      | *T1-3                 | 81 
+|
+|                    | Motion Seq Sw  | *T1-6                 | 80 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| FX1                | Type           | *T2-1                 | 12 
+|
+|                    | Edit1          | 0~127                 | 92 
+|
+|                    | Edit2          | 0~127                 | 93 
+|
+|                    | Motion Seq Sw  | 0~63/64~127 : Off/On  | 20 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| FX2                | Type           | *T2-1                 | 13 
+|
+|                    | Edit1          | 0~127                 | 94 
+|
+|                    | Edit2          | 0~127                 | 95 
+|
+|                    | Motion Seq Sw  | 0~63/64~127 : Off/On  | 21 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| FX3                | Type           | *T2-1                 | 24 
+|
+|                    | Edit1          | 0~127                 | 25 
+|
+|                    | Edit2          | 0~127                 | 26 
+|
+|                    | Motion Seq Sw  | 0~63/64~127 : Off/On  | 22 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+| FX                 | Chain          | *T2-2                 | 23 
+|
++--------------------+----------------+-----------------------+------------- 
+---+
+
+*T2-1 : 00~07 : REVERB
+         08~0F : BPM SYNC DELAY
+         10~17 : SHORT DELAY
+         18~1F : MOD DELAY
+         20~27 : GRAIN SHIFTER
+         28~2F : CHO/FLG
+         30~37 : PHASER
+         38~3F : RING MOD
+         40~47 : TALKING MOD
+         48~4F : PITCH SHIFTER
+         50~57 : COMPRESSOR
+         58~5F : DISTORTION
+         60~67 : DECIMATOR
+         68~6F : EQ
+         70~77 : LPF
+         78~7F : HPF
+
+*T2-2 : 00~1F : none
+         20~3F : FX1-FX2
+         40~5F : FX2-FX3
+         60~7F : FX1-FX2-FX3
+
+
+TABLE3 : PATTERN BANK PARAMETERS (273920 bytes)
++---------------+-----------------------------+--------------------------+
+|      0~4279   | pattern parameter (1st)     | (4280bytes)      [TABLE4]|
+|   4280~8559   | pattern parameter (2nd)     |                          |
+|       :       |                             |                          |
+| 269640~273919 | pattern parameter (64th)    |                          |
++---------------+-----------------------------+--------------------------+
+
+
+TABLE4 : PATTERN PARAMETERS (4280 bytes)
++---------------+-----------------------------+--------------------------+
+|      0~23     | Pattern Common Parameters   | (24bytes)        [TABLE5]|
++---------------+-----------------------------+--------------------------+
+|     24~57     | Part Drum1 Parameters       | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|     58~91     | Part Drum2 Parameters       | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|     92~125    | Part Drum3 Parameters       | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    126~159    | Part Drum4 Parameters       | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    160~193    | Part Drum5 Parameters       | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    194~227    | Part Drum6A Parameters      | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    228~261    | Part Drum6B Parameters      | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    262~295    | Part Drum7A Parameters      | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    296~329    | Part Drum7B Parameters      | (34bytes)        [TABLE6]|
++---------------+-----------------------------+--------------------------+
+|    330~603    | Part Keyboard1 Parameters   | (274bytes)       [TABLE7]|
++---------------+-----------------------------+--------------------------+
+|    604~877    | Part Keyboard2 Parameters   | (274bytes)       [TABLE7]|
++---------------+-----------------------------+--------------------------+
+|    878~909    | Part Stretch1 Parameters    | (32bytes)        [TABLE8]|
++---------------+-----------------------------+--------------------------+
+|    910~941    | Part Stretch2 Parameters    | (32bytes)        [TABLE8]|
++---------------+-----------------------------+--------------------------+
+|    942~973    | Part Slice Parameters       | (32bytes)        [TABLE8]|
++---------------+-----------------------------+--------------------------+
+|    974~1129   | Part AudioIn Parameters     | (156bytes)       [TABLE9]|
++---------------+-----------------------------+--------------------------+
+|   1130~1147   | Accent Parameters           | (18bytes)       [TABLE10]|
++---------------+-----------------------------+--------------------------+
+|   1148~1151   | Fx1 Parameters              | (4bytes)        [TABLE11]|
++---------------+-----------------------------+--------------------------+
+|   1152~1155   | Fx2 Parameters              | (4bytes)        [TABLE11]|
++---------------+-----------------------------+--------------------------+
+|   1156~1159   | Fx3 Parameters              | (4bytes)        [TABLE11]|
++---------------+-----------------------------+--------------------------+
+|   1160~1289   | Motion Parameters (1st)     | (130bytes)      [TABLE12]|
+|   1290~1419   | Motion Parameters (2nd)     |                          |
+|       :       |                             |                          |
+|   4150~4279   | Motion Parameters (24th)    |                          |
++---------------+-----------------------------+--------------------------+
+
+
+TABLE5 : PATTERN COMMON PARAMETERS (24 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|   0~7   | Pattern Name                 | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    8    | Tempo (MSB)                  | 20.0~300.0         iiiiiiiii 
+20~300 |
+|    9    | Tempo (LSB)                  | iiiiiiiii00ffff         ffff 0~9 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   10    | Swing                        | 0~25 : 50~75% 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b2~0 | Pattern Length               | 0~7 : 1~8 
+|
+| 
+-----+------------------------------+-------------------------------------+
+| 11 b5,4 | Beat                         | 0~3 : 16th,32nd,tri,tr2 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b7,6 | RollType                     | 0~2 : 2~4 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   12    | Fx Chain                     | 0~3 : xx,ox,xo,oo 
+(FX1-FX2,FX2-FX3) |
++---------+------------------------------+---------------------------------- 
+---+
+|   13    | Last Step                    | 0~15 : 1~16 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b4~0 | Arpeggiator Scale            | 0~30 : 1~31 
+|
+| 14 
+-----+------------------------------+-------------------------------------+
+|    b7~5 | (reserve)                    | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   15    | Arpeggiator CenterNote       | 0~127 : C-1~G9 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|  16~17  | Part Mute/Solo Status        | b15 = 0 : Mute 
+|
+|         |                              |   0/1 : Mute Off/Mute On 
+[TABLE22]|
+|         |                              | b15 = 1 : Solo 
+|
+|         |                              |   0/1 : Solo On/Solo Off 
+[TABLE22]|
++---------+------------------------------+---------------------------------- 
+---+
+|  18~19  | Part Swing Status            | 0/1 : Off/On 
+[TABLE22]|
++---------+------------------------------+---------------------------------- 
+---+
+|  20~21  | Part OutputBus Status        | 0/1 : 3/4 / L/R 
+[TABLE22]|
++---------+------------------------------+---------------------------------- 
+---+
+|  22~23  | Part Accent Status           | 0/1 : Off/On 
+[TABLE22]|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE6 : DRUM PART PARAMETERS (34 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Sample (MSB)                 | MSB="1" : OFF 
+|
+|    1    | Sample (LSB)                 | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    2    | Slice No.                    | MSB="1" : ALL 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    3    | (reserve)                    | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    4    | Filter Type                  | 0~3 : LPF/HPF/BPF/BPF+ 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    5    | Cut Off                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    6    | Resonance                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    7    | EG Intensity                 | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    8    | Pitch                        | 0~127 (64=equal pitch) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    9    | Level                        | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   10    | Panpot                       | 0~127 (64=center) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   11    | EG Time                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   12    | Start Point                  | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b1,0 | Fx Select                    | 0~2 : FX1/FX2/FX3 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b2   | Fx Send                      | 0/1 : Off/On 
+|
+| 13 
+-----+------------------------------+-------------------------------------+
+|    b3   | Roll                         | 0/1 : Off/On 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b4   | Amp EG                       | 0/1 : Gate/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b5   | Reverse                      | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b2~0 | Mod Dest                     | 0~3 : Pitch/Cutoff/Amp/Pan 
+|
+| 14 
+-----+------------------------------+-------------------------------------+
+|    b6~4 | Mod Type                     | 0~4 : Saw/Squ/Tri/S&H/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b7   | BPM Sync                     | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   15    | Mod Speed                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   16    | Mod Depth                    | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   17    | Motion Sequence Status       | 0~2 : Off/Smooth/TrigHold 
+|
++---------+------------------------------+---------------------------------- 
+---+
+| 18~33   | Sequence Data                | 
+[TABLE23]|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE7 : KEYBOARD PART PARAMETERS (274 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Sample (MSB)                 | MSB="1" : OFF 
+|
+|    1    | Sample (LSB)                 | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    2    | Slice No.                    | MSB="1" : ALL 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    3    | (reserve)                    | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    4    | Glide                        | 0~127 : Off,1~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    5    | Filter Type                  | 0~3 : LPF/HPF/BPF/BPF+ 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    6    | Cut Off                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    7    | Resonance                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    8    | EG Intensity                 | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    9    | Level                        | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   10    | Panpot                       | 0~127 (64=center) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   11    | EG Time                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   12    | Start Point                  | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b1,0 | Fx Select                    | 0~2 : FX1/FX2/FX3 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b2   | Fx Send                      | 0/1 : Off/On 
+|
+| 13 
+-----+------------------------------+-------------------------------------+
+|    b3   | Roll                         | 0/1 : Off/On 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b4   | Amp EG                       | 0/1 : Gate/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b5   | Reverse                      | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b2~0 | Mod Dest                     | 0~3 : Pitch/CutOff/Amp/Pan 
+|
+| 
+-----+------------------------------+-------------------------------------+
+| 14 b6~4 | Mde Type                     | 0~4 : Saw/Squ/Tri/S&H/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b7   | BPM Sync                     | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   15    | Mod Speed                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   16    | Mod Depth                    | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   17    | Motion Sequence Status       | 0~2 : Off/Smooth/TrigHold 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   18    | Sequence Data Note (Step1)   | 
+|
+|    :    |            :                 | 0~127 : C-1~G9 (MSB="1" : Off) 
+|
+|   145   | Sequence Data Note (Step128) | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   146   | Sequence Data Gate (Step1)   | 
+|
+|    :    |            :                 | 0~255 : 0.25~128.0 (*T7-1) 
+|
+|   273   | Sequence Data Gate (Step128) | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+
+*T7-1 : 00~07 :    0.25,    0.50,    0.75,    1.00,    1.25,    1.50, 
+1.75,    2.00
+         08~0F :    2.25,    2.50,    2.75,    3.00,    3.25,    3.50, 
+3.75,    4.00
+         10~17 :    4.25,    4.50,    4.75,    5.00,    5.25,    5.50, 
+5.75,    6.00
+         18~1F :    6.25,    6.50,    6.75,    7.00,    7.25,    7.50, 
+7.75,    8.00
+         20~27 :    8.25,    8.50,    8.75,    9.00,    9.25,    9.50, 
+9.75,   10.00
+         28~2F :   10.25,   10.50,   10.75,   11.00,   11.25,   11.50, 
+11.75,   12.00
+         30~37 :   12.25,   12.50,   12.75,   13.00,   13.25,   13.50, 
+13.75,   14.00
+         38~3F :   14.25,   14.50,   14.75,   15.00,   15.25,   15.50, 
+15.75,   16.00
+         40~47 :   16.25,   16.50,   16.75,   17.00,   17.25,   17.50, 
+17.75,   18.00
+         48~4F :   18.25,   18.50,   18.75,   19.00,   19.25,   19.50, 
+19.75,   20.00
+         50~57 :   20.25,   20.50,   20.75,   21.00,   21.25,   21.50, 
+21.75,   22.00
+         58~5F :   22.25,   22.50,   22.75,   23.00,   23.25,   23.50, 
+23.75,   24.00
+         60~67 :   24.25,   24.50,   24.75,   25.00,   25.25,   25.50, 
+25.75,   26.00
+         68~6F :   26.25,   26.50,   26.75,   27.00,   27.25,   27.50, 
+27.75,   28.00
+         70~77 :   28.25,   28.50,   28.75,   29.00,   29.25,   29.50, 
+29.75,   30.00
+         78~7F :   30.25,   30.50,   30.75,   31.00,   31.25,   31.50, 
+31.75,   32.00
+         80~87 :   32.50,   33.00,   33.50,   34.00,   34.50,   35.00, 
+35.50,   36.00
+         88~8F :   36.50,   37.00,   37.50,   38.00,   38.50,   39.00, 
+39.50,   40.00
+         90~97 :   40.50,   41.00,   41.50,   42.00,   42.50,   43.00, 
+43.50,   44.00
+         98~9F :   44.50,   45.00,   45.50,   46.00,   46.50,   47.00, 
+47.50,   48.00
+         A0~A7 :   48.50,   49.00,   49.50,   50.00,   50.50,   51.00, 
+51.50,   52.00
+         A8~AF :   52.50,   53.00,   53.50,   54.00,   54.50,   55.00, 
+55.50,   56.00
+         B0~B7 :   56.50,   57.00,   57.50,   58.00,   58.50,   59.00, 
+59.50,   60.00
+         B8~BF :   60.50,   61.00,   61.50,   62.00,   62.50,   63.00, 
+63.50,   64.00
+         C0~C7 :   65.00,   66.00,   67.00,   68.00,   69.00,   70.00, 
+71.00,   72.00
+         C8~CF :   73.00,   74.00,   75.00,   76.00,   77.00,   78.00, 
+79.00,   80.00
+         D0~D7 :   81.00,   82.00,   83.00,   84.00,   85.00,   86.00, 
+87.00,   88.00
+         D8~DF :   89.00,   90.00,   91.00,   92.00,   93.00,   94.00, 
+95.00,   96.00
+         E0~E7 :   97.00,   98.00,   99.00,  100.00,  101.00,  102.00, 
+103.00,  104.00
+         E8~EF :  105.00,  106.00,  107.00,  108.00,  109.00,  110.00, 
+111.00,  112.00
+         F0~F7 :  113.00,  114.00,  115.00,  116.00,  117.00,  118.00, 
+119.00,  120.00
+         F8~FF :  121.00,  122.00,  123.00,  124.00,  125.00,  126.00, 
+127.00,  128.00
+
+
+TABLE8 : STRETCH / SLICE PART PARAMETERS (32 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Sample (MSB)                 | MSB="1" : OFF 
+|
+|    1    | Sample (LSB)                 | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    2    | Filter Type                  | 0~3 : LPF/HPF/BPF/BPF+ 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    3    | Cut Off                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    4    | Resonance                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    5    | EG Intensity                 | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    6    | Pitch                        | 0~127 (64=equal pitch) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    7    | Level                        | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    8    | Panpot                       | 0~127 (64=center) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    9    | EG Time                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   10    | Start Point                  | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b1,0 | Fx Select                    | 0~2 : FX1/FX2/FX3 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b2   | Fx Send                      | 0/1 : Off/On 
+|
+| 11 
+-----+------------------------------+-------------------------------------+
+|    b3   | Roll                         | 0/1 : Off/On 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b4   | Amp EG                       | 0/1 : Gate/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b5   | Reverse                      | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b2~0 | Mod Dest                     | 0~3 : Pitch/Cutoff/Amp/Pan 
+|
+| 12 
+-----+------------------------------+-------------------------------------+
+|    b6~4 | Mod Type                     | 0~4 : Saw/Squ/Tri/S&H/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b7   | BPM Sync                     | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   13    | Mod Speed                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   14    | Mod Depth                    | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   15    | Motion Sequence Status       | 0~2 : Off/Smooth/TrigHold 
+|
++---------+------------------------------+---------------------------------- 
+---+
+| 16~31   | Sequence Data                | 
+[TABLE23]|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE9 : AUDIOIN PART PARAMETERS (156 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Filter Type                  | 0~3 : LPF/HPF/BPF/BPF+ 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    1    | Cut Off                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    2    | Resonance                    | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    3    | EG Intensity                 | 0~64~127 : -63~0~+63 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    4    | Level                        | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    5    | Panpot                       | 0~127 (64=center) 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    6    | EG Time                      | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b1,0 | Fx Select                    | 0~2 : FX1/FX2/FX3 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b2   | Fx Send                      | 0/1 : Off/On 
+|
+| 7 
+-----+------------------------------+-------------------------------------+
+|    b3   | Roll                         | 0/1 : Off/On 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b4   | Amp EG                       | 0/1 : Gate/EG 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    b2~0 | Mod Dest                     | 1~3 : Cutoff/Amp/Pan 
+|
+| 
+-----+------------------------------+-------------------------------------+
+| 8  b6~4 | Mod Type                     | 0~4 : Saw/Squ/Tri/S&H/EG 
+|
+| 
+-----+------------------------------+-------------------------------------+
+|    b7   | BPM Sync                     | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    9    | Mod Speed                    | 0~127 
+|
++---------+------------------------------+-------------------------------------+
+|   10    | Mod Depth 
+| 0~64~127 : -63~0~+63                |
++---------+------------------------------+---------------------------------- 
+---+
+|   11    | Motion Sequence Status       | 0~2 : Off/Smooth/TrigHold 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|  12~27  | Sequence Data Step           | 
+[TABLE23]|
++---------+------------------------------+---------------------------------- 
+---+
+|    28   | Sequence Data Gate (Step1)   | 
+|
+|    :    |            :                 | 0~255 : 0.25~128.0 (*T7-1) 
+|
+|   155   | Sequence Data Gate (Step128) | 
+|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE10 : ACCENT PART PARAMTERS (18 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Level                        | 0~127 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|    1    | Motion Sequence Status       | 0/2 : Off/TrigHold 
+|
++---------+------------------------------+---------------------------------- 
+---+
+|   2~17  | Sequence Data                | 
+[TABLE23]|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE11 : FX PARAMETERS (4 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|    0    | Effect Type                  | 0~15 : 1~16 
+[TABLE24]|
++---------+------------------------------+---------------------------------- 
+---+
+|    1    | Edit1                        | 0~127 
+[TABLE24]|
++---------+------------------------------+---------------------------------- 
+---+
+|    2    | Edit2                        | 0~127 
+[TABLE24]|
++---------+------------------------------+---------------------------------- 
+---+
+|    3    | Motion Sequence Status       | 0/1 : Off/On 
+|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE12 : MOTION SEQUENCE PARAMETERS (130 bytes)
++---------+------------------------------+---------------------------------- 
+---+
+|   0~1   | Operation No.                | 
+[TABLE25]|
++---------+------------------------------+---------------------------------- 
+---+
+|  2~129  | Value                        | (MSB="1" : Off) 
+[TABLE25]|
++---------+------------------------------+---------------------------------- 
+---+
+
+
+TABLE13 : GLOBAL PARAMETERS (192 bytes)
++---------+------------------------------+---------------------------------- 
+-----------+
+|    0    | Memory Protect               | 0/1 : Protect Off/On 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    1    | (reserve)                    | 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    2    | Arp Control                  | 0/1 : Normal/Reverse 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    3    | Audio In Mode                | 0/1 : L/Mono / Stereo 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    4    | MIDI Clock                   | 0~2 : Int/Ext/Auto 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    b0   | Note Message Enable Flag     | 0/1 : Dis/Ena 
+|
+| 
+-----+------------------------------+--------------------------------------- 
+------+
+|    b1   | System Ex. Enable Flag       | 0/1 : Dis/Ena 
+|
+| 5 
+-----+------------------------------+--------------------------------------- 
+------+
+|    b2   | Control Change Enable Flag   | 0/1 : Dis/Ena 
+|
+| 
+-----+------------------------------+--------------------------------------- 
+------+
+|    b3   | Program Change Enable Flag   | 0/1 : Dis/Ena 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|    6    | Pitch Bend Range             | 0~12~24 : -12~0~12 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|   7~9   | MIDI Channel                 | 0~15 : 1ch~16ch 
+[TABLE26]|
++---------+------------------------------+---------------------------------- 
+-----------+
+|  10~22  | Drum Note Number             | 0~127 : C-1~G9 
+[TABLE27]|
++---------+------------------------------+---------------------------------- 
+-----------+
+|  23~55  | MIDI Control Change Assign   | (33bytes) 
+[TABLE28]|
+|         |                              | CC# = 01~05,07~31,33~37,39~95 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|  56~63  | (reserve)                    | 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+|  64~191 | Pattern Set Parameters       | 0~255 : A01~D64 
+|
++---------+------------------------------+---------------------------------- 
+-----------+
+
+
+TABLE14 : CURRENT SONG PARAMETER
++---------------+---------------------------+------------------------------- 
+------+
+|      0~527    | Song Parameter            | (528bytes) 
+[TABLE16]|
++---------------+---------------------------+------------------------------- 
+------+
+|     Song Event Data 
+|
++---------------+---------------------------+------------------------------- 
+------+
+|    528~535    | event data (1st)          | (8bytes)   [TABLE17] or 
+[TABLE18]   |
+|    536~543    | event data (2nd)          |            or [TABLE19] or 
+[TABLE20]|
+|       :       |                           |            or [TABLE21] 
+|
+| 160520~160527 | event data (20000th(max)) | 
+|
+|          (max)|                           | 
+|
++---------------+---------------------------+------------------------------- 
+------+
+
+
+TABLE15 : ALL SONG DATA
++---------------+---------------------------+------------------------------- 
+------+
+|     0~527     | Song Parameter (1st)      | (528bytes) 
+[TABLE16]|
+|    528~1055   | Song Parameter (2nd)      | 
+|
+|      :        |                           | 
+|
+|  33264~33791  | Song Parameter (64th)     | 
+|
++---------------+---------------------------+------------------------------- 
+------+
+|     Song Event Data 
+|
+|       (Event Size is total number of event of All Songs.) 
+|
++---------------+---------------------------+------------------------------- 
+------+
+|  33792~33799  | event data (1st)          | (8bytes)   [TABLE17] or 
+[TABLE18]   |
+|  33800~33807  | event data (2nd)          |            or [TABLE19] or 
+[TABLE20]|
+|     :         |                           |            or [TABLE21] 
+|
+| 193784~193791 | event data (20000th(max)) | 
+|
+|          (max)|                           | 
+|
++---------------+---------------------------+------------------------------- 
+------+
+
+
+TABLE16 : SONG PARAMETER (528 bytes)
++---------+----------------------------+-------------------------------------+
+|   0~7   | Song Name                  |                                     |
++---------+----------------------------+-------------------------------------+
+|    8    | Tempo (MSB)                | 20.0~300.0         iiiiiiiii 20~300 |
+|    9    | Tempo (LSB)                | iiiiiiiii00ffff         ffff .0~.9  |
++---------+----------------------------+-------------------------------------+
+|   10    | Tempo Lock                 | 0/1 : Off/On                        |
++---------+----------------------------+-------------------------------------+
+|   11    | Length                     | 0~255 : 1~256                       |
++---------+----------------------------+-------------------------------------+
+|   12    | Mute Hold                  | 0/1 : Off/On                        |
++---------+----------------------------+-------------------------------------+
+|   13    | Next Song                  | 0~64 : Off,song1~song64             |
++---------+----------------------------+-------------------------------------+
+|  14~15  | Num of Events              | 0~19999                             |
++---------+----------------------------+-------------------------------------+
+|   16    | Pattern Number (1st)       |                                     |
+|    :    |     :                      | 0~255 : A01~D64                     |
+|   271   | Pattern Number (256th)     |                                     |
++---------+----------------------------+-------------------------------------+
+|   272   | Note Offset (1st)          |                                     |
+|    :    |     :                      | -24~+24                             |
+|   527   | Note Offset (256th)        |                                     |
++---------+----------------------------+-------------------------------------+
+
+
+TABLE17 : SONG EVENT DATA (Control Type) (8byte)
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    0    | Position Number        | 0~255 : 1~256 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    b7~4 | Measure                | 0~7 : 1~8 
+|
+| 1 
+-----+------------------------+--------------------------------------------- 
+-----------------+
+|    b3~0 | Step                   | 0~15 : 1~16 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   2~3   | Operation No.          | 
+[TABLE25]|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    4    | (reserve)              | 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    5    | Value                  | 
+[TABLE25]|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   6~7   | (reserve)              | AAAA [H] (fixed) 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+
+
+TABLE18 : SONG EVENT DATA (Drum Note Type) (8byte)
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    0    | Position Number        | 0~255 : 1~256 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    b7~4 | Measure                | 0~7 : 1~8 
+|
+| 1 
+-----+------------------------+--------------------------------------------- 
+-----------------+
+|    b3~0 | Step                   | 0~15 : 1~16 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   2~3   | (reserve)              | 4000 [H] (fixed) 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    4    | Part                   | 0~15 : 
+drum1~7B,accent,keyboard1~2,stretch1~2,slice,audio in |
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   5~7   | (reserve)              | 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+
+
+TABLE19 : SONG EVENT DATA (Keyboard Note Type) (8byte)
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    0    | Position Number        | 0~255 : 1~256 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    b7~4 | Measure                | 0~7 : 1~8 
+|
+| 1 
+-----+------------------------+--------------------------------------------- 
+-----------------+
+|    b3~0 | Step                   | 0~15 : 1~16 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   2~3   | (reserve)              | 4000 [H] (fixed) 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    4    | Part                   | 0~15 : 
+drum1~7B,accent,keyboard1~2,stretch1~2,slice,audio in |
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    5    | Note No.               | 0~127 : C-1~G9 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   6~7   | Length                 | 0~32767     : 0.25~8192.00 (per 0.25) 
+|
+|         |                        | 32768~49151 : 8192.50~12288.00 (per 
+0.5)                     |
+|         |                        | 49152~65535 : 12289.00~16384.00 (per 
+1.0)                    |
++---------+------------------------+---------------------------------------- 
+----------------------+
+
+
+TABLE20 : SONG EVENT DATA (Tempo Type) (8byte)
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    0    | Position Number        | 0~255 : 1~256 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    b7~4 | Measure                | 0~7 : 1~8 
+|
+| 1 
+-----+------------------------+--------------------------------------------- 
+-----------------+
+|    b3~0 | Step                   | 0~15 : 1~16 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   2~3   | Operation No.          | 515 (fixed) 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   4~5   | (reserve)              | 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   6~7   | Tempo                  | 20.0~300.0 
+iiiiiiiii = 20~300       |
+|         |                        | 0iiiiiiiiiffffff 
+ffffff = 0~63 : .0~.9 |
++---------+------------------------+---------------------------------------- 
+----------------------+
+
+
+TABLE21 : SONG EVENT DATA (Mute/Solo Type) (8byte)
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    0    | Position Number        | 0~255 : 1~256 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|    b7~4 | Measure                | 0~7 : 1~8 
+|
+| 1  -----+------------------------+--------------------------------------------------------------+
+|    b3~0 | Step                   | 0~15 : 1~ 
+16                                                  |
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   2~3   | Operation No.          | 503 (fixed) 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   4~5   | (reserve)              | 
+|
++---------+------------------------+---------------------------------------- 
+----------------------+
+|   6~7   | Part Mute/Solo Status  | b15 = 0 : Mute 
+|
+|         |                        |   0/1 : Mute Off/Mute On 
+[TABLE22]|
+|         |                        | b15 = 1 : Solo 
+|
+|         |                        |   0/1 : Solo On/Solo Off 
+[TABLE22]|
++---------+------------------------+---------------------------------------- 
+----------------------+
+
+
+TABLE22 : PART STATUS PARAMETERS (2 bytes)
++-----------+-----------------------+-------+
+|        b6 | Part AudioIn Status   | 0/1   |
+|        ---+-----------------------+-------+
+|        b5 | Part Slice Status     | 0/1   |
+|        ---+-----------------------+-------+
+|        b4 | Part Stretch2 Status  | 0/1   |
+|        ---+-----------------------+-------+
+|        b3 | Part Stretch1 Status  | 0/1   |
+| 0[MSB] ---+-----------------------+-------+
+|        b2 | Part Keyboard2 Status | 0/1   |
+|        ---+-----------------------+-------+
+|        b1 | Part Keyboard1 Status | 0/1   |
+|        ---+-----------------------+-------+
+|        b0 | Part Drum7B Status    | 0/1   |
++-----------+-----------------------+-------+
+|        b7 | Part Drum7A Status    | 0/1   |
+|        ---+-----------------------+-------+
+|        b6 | Part Drum6B Status    | 0/1   |
+|        ---+-----------------------+-------+
+|        b5 | Part Drum6A Status    | 0/1   |
+|        ---+-----------------------+-------+
+|        b4 | Part Drum5 Status     | 0/1   |
+| 1[LSB] ---+-----------------------+-------+
+|        b3 | Part Drum4 Status     | 0/1   |
+|        ---+-----------------------+-------+
+|        b2 | Part Drum3 Status     | 0/1   |
+|        ---+-----------------------+-------+
+|        b1 | Part Drum2 Status     | 0/1   |
+|        ---+-----------------------+-------+
+|        b0 | Part Drum1 Status     | 0/1   |
++-----------+-----------------------+-------+
+
+
+TABLE23 : DRUM / STRETCH / SLICE / AUDIOIN / ACCENT PART STEP SEQUECNCE 
+DATA (16 bytes)
++--------+------------------------+----------------------------+
+| Offset |     bit pattern        |  value (on Accent Part)    |
++--------+------------------------+----------------------------+
+|    0   | Bit0~7 (Step1 ~8)      | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    1   | Bit0~7 (Step9 ~16)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    2   | Bit0~7 (Step17~24)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    3   | Bit0~7 (Step25~32)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    4   | Bit0~7 (Step33~40)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    5   | Bit0~7 (Step41~48)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    6   | Bit0~7 (Step49~56)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    7   | Bit0~7 (Step57~64)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    8   | Bit0~7 (Step65~72)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|    9   | Bit0~7 (Step73~80)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   10   | Bit0~7 (Step81~88)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   11   | Bit0~7 (Step89~96)     | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   12   | Bit0~7 (Step97~104)    | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   13   | Bit0~7 (Step105~112)   | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   14   | Bit0~7 (Step113~120)   | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+|   15   | Bit0~7 (Step121~128)   | 0/1 : Off(Soft)/On(hard)   |
++--------+------------------------+----------------------------+
+
+
+TABLE24 : Effect List
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|        |      NAME       |      EDIT1       |  PARAMETER  |       EDIT2 
+|  PARAMETER  |
+|        |                 |                  |   [D]       | 
+|   [D]       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    1   | Reverb          | Time             | 0~127       | Level 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    2   | BPM Sync Delay  | Time             | *T24-1      | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    3   | Short Delay     | Time             | 0~127       | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    4   | Mod Delay       | Time             | *T24-1      | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    5   | Grain Shifter   | Speed            | 0~127       | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    6   | Cho/Flg         | LFO Rate         | 0~127       | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    7   | Phaser          | LFO Rate         | 0~127       | Depth 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    8   | Ring Mod        | Frequency        | 0~127       | Balance 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|    9   | Talking Mod     | Formant          | 0~127       | Offset 
+| -63~+63     |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   10   | Pitch Shifter   | Pitch            | 0~127       | Balance 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   11   | Compressor      | Sensitivity      | -2400~+2400 | Attack 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   12   | Distortion      | Gain             | 0~127       | Level 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   13   | Decimator       | Sampling Freq    | 0~127       | Sampling Bit 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   14   | EQ              | Low Gain (80Hz)  | -63~+63     | High Gain 
+(12kHz)  | -63~+63     |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+|   15   | LPF             | Cutoff Freq      | 0~127       | Resonance 
+| 0~127       |
++--------+-----------------+------------------+-------------+---------------- 
+----+-------------+
+|   16   | HPF             | Cutoff Freq      | 0~127       | Resonance 
+| 0~127       |
++--------+-----------------+------------------+-------------+--------------- 
+-----+-------------+
+
+*T24-1 : 1/64,1/32,1/24,1/16,1/12,1/8,1/6,3/16,1/4,1/3,3/8,1/2,3/4,1/1
+
+
+TABLE25 : Opration No. & Value
++---------+----------------------------------+------------------------------ 
+-+------------+------------+
+| No. [H] |      Parameter                   |      Value [D] 
+| Motion Seq | Song Event |
++---------+----------------------------------+------------------------------ 
+-+------------+------------+
+|   004   | Drum1 Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   005   | Drum1 Filter Type                | *T1-2 
+|     O      |     O      |
+|   006   | Drum1 Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   007   | Drum1 Filter Resonance           | 0~127 
+|     O      |     O      |
+|   008   | Drum1 Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   009   | Drum1 Start Point                | 0~127 
+|     O      |     O      |
+|   00A   | Drum1 Level                      | 0~127 
+|     O      |     O      |
+|   00B   | Drum1 Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   00C   | Drum1 EG Time                    | 0~127 
+|     O      |     O      |
+|   00D   | Drum1 Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   00E   | Drum1 Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   00F   | Drum1 Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   010   | Drum1 Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   011   | Drum1 Effect Select              | *T1-3 
+|     O      |     O      |
+|   012   | Drum1 Modulation Type            | *T1-4 
+|     O      |     O      |
+|   013   | Drum1 Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   014   | Drum1 Modulation Speed           | 0~127 
+|     O      |     O      |
+|   015   | Drum1 Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   016   | Drum1 Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   017   | Drum1 Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   024   | Drum2 Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   025   | Drum2 Filter Type                | *T1-2 
+|     O      |     O      |
+|   026   | Drum2 Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   027   | Drum2 Filter Resonance           | 0~127 
+|     O      |     O      |
+|   028   | Drum2 Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   029   | Drum2 Start Point                | 0~127 
+|     O      |     O      |
+|   02A   | Drum2 Level                      | 0~127 
+|     O      |     O      |
+|   02B   | Drum2 Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   02C   | Drum2 EG Time                    | 0~127 
+|     O      |     O      |
+|   02D   | Drum2 Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   02E   | Drum2 Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   02F   | Drum2 Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   030   | Drum2 Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   031   | Drum2 Effect Select              | *T1-3 
+|     O      |     O      |
+|   032   | Drum2 Modulation Type            | *T1-4 
+|     O      |     O      |
+|   033   | Drum2 Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   034   | Drum2 Modulation Speed           | 0~127 
+|     O      |     O      |
+|   035   | Drum2 Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   036   | Drum2 Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   037   | Drum2 Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   044   | Drum3 Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   045   | Drum3 Filter Type                | *T1-2 
+|     O      |     O      |
+|   046   | Drum3 Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   047   | Drum3 Filter Resonance           | 0~127 
+|     O      |     O      |
+|   048   | Drum3 Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   049   | Drum3 Start Point                | 0~127 
+|     O      |     O      |
+|   04A   | Drum3 Level                      | 0~127 
+|     O      |     O      |
+|   04B   | Drum3 Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   04C   | Drum3 EG Time                    | 0~127 
+|     O      |     O      |
+|   04D   | Drum3 Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   04E   | Drum3 Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   04F   | Drum3 Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   050   | Drum3 Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   051   | Drum3 Effect Select              | *T1-3 
+|     O      |     O      |
+|   052   | Drum3 Modulation Type            | *T1-4 
+|     O      |     O      |
+|   053   | Drum3 Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   054   | Drum3 Modulation Speed           | 0~127 
+|     O      |     O      |
+|   055   | Drum3 Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   056   | Drum3 Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   057   | Drum3 Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   064   | Drum4 Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   065   | Drum4 Filter Type                | *T1-2 
+|     O      |     O      |
+|   066   | Drum4 Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   067   | Drum4 Filter Resonance           | 0~127 
+|     O      |     O      |
+|   068   | Drum4 Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   069   | Drum4 Start Point                | 0~127 
+|     O      |     O      |
+|   06A   | Drum4 Level                      | 0~127 
+|     O      |     O      |
+|   06B   | Drum4 Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   06C   | Drum4 EG Time                    | 0~127 
+|     O      |     O      |
+|   06D   | Drum4 Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   06E   | Drum4 Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   06F   | Drum4 Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   070   | Drum4 Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   071   | Drum4 Effect Select              | *T1-3 
+|     O      |     O      |
+|   072   | Drum4 Modulation Type            | *T1-4 
+|     O      |     O      |
+|   073   | Drum4 Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   074   | Drum4 Modulation Speed           | 0~127 
+|     O      |     O      |
+|   075   | Drum4 Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   076   | Drum4 Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   077   | Drum4 Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   084   | Drum5 Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   085   | Drum5 Filter Type                | *T1-2 
+|     O      |     O      |
+|   086   | Drum5 Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   087   | Drum5 Filter Resonance           | 0~127 
+|     O      |     O      |
+|   088   | Drum5 Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   089   | Drum5 Start Point                | 0~127 
+|     O      |     O      |
+|   08A   | Drum5 Level                      | 0~127 
+|     O      |     O      |
+|   08B   | Drum5 Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   08C   | Drum5 EG Time                    | 0~127 
+|     O      |     O      |
+|   08D   | Drum5 Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   08E   | Drum5 Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   08F   | Drum5 Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   090   | Drum5 Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   091   | Drum5 Effect Select              | *T1-3 
+|     O      |     O      |
+|   092   | Drum5 Modulation Type            | *T1-4 
+|     O      |     O      |
+|   093   | Drum5 Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   094   | Drum5 Modulation Speed           | 0~127 
+|     O      |     O      |
+|   095   | Drum5 Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   096   | Drum5 Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   097   | Drum5 Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   0A4   | Drum6A Pitch                     | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   0A5   | Drum6A Filter Type               | *T1-2 
+|     O      |     O      |
+|   0A6   | Drum6A Filter Cutoff             | 0~127 
+|     O      |     O      |
+|   0A7   | Drum6A Filter Resonance          | 0~127 
+|     O      |     O      |
+|   0A8   | Drum6A Filter EG Int             | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0A9   | Drum6A Start Point               | 0~127 
+|     O      |     O      |
+|   0AA   | Drum6A Level                     | 0~127 
+|     O      |     O      |
+|   0AB   | Drum6A Pan                       | 0~127 (64=center) 
+|     O      |     O      |
+|   0AC   | Drum6A EG Time                   | 0~127 
+|     O      |     O      |
+|   0AD   | Drum6A Amp EG                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0AE   | Drum6A Roll                      | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0AF   | Drum6A Reverse                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0B0   | Drum6A Effect Send               | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0B1   | Drum6A Effect Select             | *T1-3 
+|     O      |     O      |
+|   0B2   | Drum6A Modulation Type           | *T1-4 
+|     O      |     O      |
+|   0B3   | Drum6A Modulation Depth          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0B4   | Drum6A Modulation Speed          | 0~127 
+|     O      |     O      |
+|   0B5   | Drum6A Modulation Destination    | *T1-5 
+|     O      |     O      |
+|   0B6   | Drum6A Modulation BPM Sync       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0B7   | Drum6A Motion Seq Type           | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   0C4   | Drum6B Pitch                     | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   0C5   | Drum6B Filter Type               | *T1-2 
+|     O      |     O      |
+|   0C6   | Drum6B Filter Cutoff             | 0~127 
+|     O      |     O      |
+|   0C7   | Drum6B Filter Resonance          | 0~127 
+|     O      |     O      |
+|   0C8   | Drum6B Filter EG Int             | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0C9   | Drum6B Start Point               | 0~127 
+|     O      |     O      |
+|   0CA   | Drum6B Level                     | 0~127 
+|     O      |     O      |
+|   0CB   | Drum6B Pan                       | 0~127 (64=center) 
+|     O      |     O      |
+|   0CC   | Drum6B EG Time                   | 0~127 
+|     O      |     O      |
+|   0CD   | Drum6B Amp EG                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0CE   | Drum6B Roll                      | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0CF   | Drum6B Reverse                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0D0   | Drum6B Effect Send               | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0D1   | Drum6B Effect Select             | *T1-3 
+|     O      |     O      |
+|   0D2   | Drum6B Modulation Type           | *T1-4 
+|     O      |     O      |
+|   0D3   | Drum6B Modulation Depth          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0D4   | Drum6B Modulation Speed          | 0~127 
+|     O      |     O      |
+|   0D5   | Drum6B Modulation Destination    | *T1-5 
+|     O      |     O      |
+|   0D6   | Drum6B Modulation BPM Sync       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0D7   | Drum6B Motion Seq Type           | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   0E4   | Drum7A Pitch                     | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   0E5   | Drum7A Filter Type               | *T1-2 
+|     O      |     O      |
+|   0E6   | Drum7A Filter Cutoff             | 0~127 
+|     O      |     O      |
+|   0E7   | Drum7A Filter Resonance          | 0~127 
+|     O      |     O      |
+|   0E8   | Drum7A Filter EG Int             | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0E9   | Drum7A Start Point               | 0~127 
+|     O      |     O      |
+|   0EA   | Drum7A Level                     | 0~127 
+|     O      |     O      |
+|   0EB   | Drum7A Pan                       | 0~127 (64=center) 
+|     O      |     O      |
+|   0EC   | Drum7A EG Time                   | 0~127 
+|     O      |     O      |
+|   0ED   | Drum7A Amp EG                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0EE   | Drum7A Roll                      | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0EF   | Drum7A Reverse                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0F0   | Drum7A Effect Send               | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0F1   | Drum7A Effect Select             | *T1-3 
+|     O      |     O      |
+|   0F2   | Drum7A Modulation Type           | *T1-4 
+|     O      |     O      |
+|   0F3   | Drum7A Modulation Depth          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   0F4   | Drum7A Modulation Speed          | 0~127 
+|     O      |     O      |
+|   0F5   | Drum7A Modulation Destination    | *T1-5 
+|     O      |     O      |
+|   0F6   | Drum7A Modulation BPM Sync       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   0F7   | Drum7A Motion Seq Type           | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   104   | Drum7B Pitch                     | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   105   | Drum7B Filter Type               | *T1-2 
+|     O      |     O      |
+|   106   | Drum7B Filter Cutoff             | 0~127 
+|     O      |     O      |
+|   107   | Drum7B Filter Resonance          | 0~127 
+|     O      |     O      |
+|   108   | Drum7B Filter EG Int             | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   109   | Drum7B Start Point               | 0~127 
+|     O      |     O      |
+|   10A   | Drum7B Level                     | 0~127 
+|     O      |     O      |
+|   10B   | Drum7B Pan                       | 0~127 (64=center) 
+|     O      |     O      |
+|   10C   | Drum7B EG Time                   | 0~127 
+|     O      |     O      |
+|   10D   | Drum7B Amp EG                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   10E   | Drum7B Roll                      | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   10F   | Drum7B Reverse                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   110   | Drum7B Effect Send               | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   111   | Drum7B Effect Select             | *T1-3 
+|     O      |     O      |
+|   112   | Drum7B Modulation Type           | *T1-4 
+|     O      |     O      |
+|   113   | Drum7B Modulation Depth          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   114   | Drum7B Modulation Speed          | 0~127 
+|     O      |     O      |
+|   115   | Drum7B Modulation Destination    | *T1-5 
+|     O      |     O      |
+|   116   | Drum7B Modulation BPM Sync       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   117   | Drum7B Motion Seq Type           | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   123   | Keyboard1 Glide                  | 0~127 : Off,1~127 
+|     O      |     O      |
+|   125   | Keyboard1 Filter Type            | *T1-2 
+|     O      |     O      |
+|   126   | Keyboard1 Filter Cutoff          | 0~127 
+|     O      |     O      |
+|   127   | Keyboard1 Filter Resonance       | 0~127 
+|     O      |     O      |
+|   128   | Keyboard1 Filter EG Int          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   129   | Keyboard1 Start Point            | 0~127 
+|     O      |     O      |
+|   12A   | Keyboard1 Level                  | 0~127 
+|     O      |     O      |
+|   12B   | Keyboard1 Pan                    | 0~127 (64=center) 
+|     O      |     O      |
+|   12C   | Keyboard1 EG Time                | 0~127 
+|     O      |     O      |
+|   12D   | Keyboard1 Amp EG                 | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   12E   | Keyboard1 Roll                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   12F   | Keyboard1 Reverse                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   130   | Keyboard1 Effect Send            | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   131   | Keyboard1 Effect Select          | *T1-3 
+|     O      |     O      |
+|   132   | Keyboard1 Modulation Type        | *T1-4 
+|     O      |     O      |
+|   133   | Keyboard1 Modulation Depth       | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   134   | Keyboard1 Modulation Speed       | 0~127 
+|     O      |     O      |
+|   135   | Keyboard1 Modulation Destination | *T1-5 
+|     O      |     O      |
+|   136   | Keyboard1 Modulation BPM Sync    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   137   | Keyboard1 Motion Seq Type        | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   143   | Keyboard2 Glide                  | 0~127 : Off,1~127 
+|     O      |     O      |
+|   145   | Keyboard2 Filter Type            | *T1-2 
+|     O      |     O      |
+|   146   | Keyboard2 Filter Cutoff          | 0~127 
+|     O      |     O      |
+|   147   | Keyboard2 Filter Resonance       | 0~127 
+|     O      |     O      |
+|   148   | Keyboard2 Filter EG Int          | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   149   | Keyboard2 Start Point            | 0~127 
+|     O      |     O      |
+|   14A   | Keyboard2 Level                  | 0~127 
+|     O      |     O      |
+|   14B   | Keyboard2 Pan                    | 0~127 (64=center) 
+|     O      |     O      |
+|   14C   | Keyboard2 EG Time                | 0~127 
+|     O      |     O      |
+|   14D   | Keyboard2 Amp EG                 | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   14E   | Keyboard2 Roll                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   14F   | Keyboard2 Reverse                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   150   | Keyboard2 Effect Send            | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   151   | Keyboard2 Effect Select          | *T1-3 
+|     O      |     O      |
+|   152   | Keyboard2 Modulation Type        | *T1-4 
+|     O      |     O      |
+|   153   | Keyboard2 Modulation Depth       | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   154   | Keyboard2 Modulation Speed       | 0~127 
+|     O      |     O      |
+|   155   | Keyboard2 Modulation Destination | *T1-5 
+|     O      |     O      |
+|   156   | Keyboard2 Modulation BPM Sync    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   157   | Keyboard2 Motion Seq Type        | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   164   | Stretch1 Pitch                   | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   165   | Stretch1 Filter Type             | *T1-2 
+|     O      |     O      |
+|   166   | Stretch1 Filter Cutoff           | 0~127 
+|     O      |     O      |
+|   167   | Stretch1 Filter Resonance        | 0~127 
+|     O      |     O      |
+|   168   | Stretch1 Filter EG Int           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   169   | Stretch1 Start Point             | 0~127 
+|     O      |     O      |
+|   16A   | Stretch1 Level                   | 0~127 
+|     O      |     O      |
+|   16B   | Stretch1 Pan                     | 0~127 (64=center) 
+|     O      |     O      |
+|   16C   | Stretch1 EG Time                 | 0~127 
+|     O      |     O      |
+|   16D   | Stretch1 Amp EG                  | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   16E   | Stretch1 Roll                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   16F   | Stretch1 Reverse                 | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   170   | Stretch1 Effect Send             | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   171   | Stretch1 Effect Select           | *T1-3 
+|     O      |     O      |
+|   172   | Stretch1 Modulation Type         | *T1-4 
+|     O      |     O      |
+|   173   | Stretch1 Modulation Depth        | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   174   | Stretch1 Modulation Speed        | 0~127 
+|     O      |     O      |
+|   175   | Stretch1 Modulation Destination  | *T1-5 
+|     O      |     O      |
+|   176   | Stretch1 Modulation BPM Sync     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   177   | Stretch1 Motion Seq Type         | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   184   | Stretch2 Pitch                   | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   185   | Stretch2 Filter Type             | *T1-2 
+|     O      |     O      |
+|   186   | Stretch2 Filter Cutoff           | 0~127 
+|     O      |     O      |
+|   187   | Stretch2 Filter Resonance        | 0~127 
+|     O      |     O      |
+|   188   | Stretch2 Filter EG Int           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   189   | Stretch2 Start Point             | 0~127 
+|     O      |     O      |
+|   18A   | Stretch2 Level                   | 0~127 
+|     O      |     O      |
+|   18B   | Stretch2 Pan                     | 0~127 (64=center) 
+|     O      |     O      |
+|   18C   | Stretch2 EG Time                 | 0~127 
+|     O      |     O      |
+|   18D   | Stretch2 Amp EG                  | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   18E   | Stretch2 Roll                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   18F   | Stretch2 Reverse                 | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   190   | Stretch2 Effect Send             | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   191   | Stretch2 Effect Select           | *T1-3 
+|     O      |     O      |
+|   192   | Stretch2 Modulation Type         | *T1-4 
+|     O      |     O      |
+|   193   | Stretch2 Modulation Depth        | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   194   | Stretch2 Modulation Speed        | 0~127 
+|     O      |     O      |
+|   195   | Stretch2 Modulation Destination  | *T1-5 
+|     O      |     O      |
+|   196   | Stretch2 Modulation BPM Sync     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   197   | Stretch2 Motion Seq Type         | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   1A4   | Slice Pitch                      | 0~127 (64=equal pitch) 
+|     O      |     O      |
+|   1A5   | Slice Filter Type                | *T1-2 
+|     O      |     O      |
+|   1A6   | Slice Filter Cutoff              | 0~127 
+|     O      |     O      |
+|   1A7   | Slice Filter Resonance           | 0~127 
+|     O      |     O      |
+|   1A8   | Slice Filter EG Int              | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   1A9   | Slice Start Point                | 0~127 
+|     O      |     O      |
+|   1AA   | Slice Level                      | 0~127 
+|     O      |     O      |
+|   1AB   | Slice Pan                        | 0~127 (64=center) 
+|     O      |     O      |
+|   1AC   | Slice EG Time                    | 0~127 
+|     O      |     O      |
+|   1AD   | Slice Amp EG                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1AE   | Slice Roll                       | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1AF   | Slice Reverse                    | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1B0   | Slice Effect Send                | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1B1   | Slice Effect Select              | *T1-3 
+|     O      |     O      |
+|   1B2   | Slice Modulation Type            | *T1-4 
+|     O      |     O      |
+|   1B3   | Slice Modulation Depth           | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   1B4   | Slice Modulation Speed           | 0~127 
+|     O      |     O      |
+|   1B5   | Slice Modulation Destination     | *T1-5 
+|     O      |     O      |
+|   1B6   | Slice Modulation BPM Sync        | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1B7   | Slice Motion Seq Type            | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   1C5   | AudioIn Filter Type              | *T1-2 
+|     O      |     O      |
+|   1C6   | AudioIn Filter Cutoff            | 0~127 
+|     O      |     O      |
+|   1C7   | AudioIn Filter Resonance         | 0~127 
+|     O      |     O      |
+|   1C8   | AudioIn Filter EG Int            | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   1CA   | AudioIn Level                    | 0~127 
+|     O      |     O      |
+|   1CB   | AudioIn Pan                      | 0~127 (64=center) 
+|     O      |     O      |
+|   1CC   | AudioIn EG Time                  | 0~127 
+|     O      |     O      |
+|   1CD   | AudioIn Amp EG                   | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1CE   | AudioIn Roll                     | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1D0   | AudioIn Effect Send              | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1D1   | AudioIn Effect Select            | *T1-3 
+|     O      |     O      |
+|   1D2   | AudioIn Modulation Type          | *T1-4 
+|     O      |     O      |
+|   1D3   | AudioIn Modulation Depth         | 0~64~127 : -63~0~63 
+|     O      |     O      |
+|   1D4   | AudioIn Modulation Speed         | 0~127 
+|     O      |     O      |
+|   1D5   | AudioIn Modulation Destination   | *T1-7 
+|     O      |     O      |
+|   1D6   | AudioIn Modulation BPM Sync      | 0~63/64~127 : Off/On 
+|     O      |     O      |
+|   1D7   | AudioIn Motion Seq Type          | *T1-6 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   1E0   | Accent Level                     | 0~127 
+|     O      |     O      |
+|   1E1   | Accent Motion Seq SW             | 0~42/43~127 : Off/Trig Hold 
+|     X      |     O      |
+|         |                                  | 
+|            |            |
+|   1E4   | FX1 Type                         | *T2-1 
+|     X      |     O      |
+|   1E5   | FX1 Edit1                        | 0~127 
+|     O      |     O      |
+|   1E6   | FX1 Edit2                        | 0~127 
+|     O      |     O      |
+|   1E7   | FX1 Motion Seq SW                | 0~63/64~127 : Off/On 
+|     X      |     O      |
+|   1E8   | FX2 Type                         | *T2-1 
+|     X      |     O      |
+|   1E9   | FX2 Edit1                        | 0~127 
+|     O      |     O      |
+|   1EA   | FX2 Edit2                        | 0~127 
+|     O      |     O      |
+|   1EB   | FX2 Motion Seq SW                | 0~63/64~127 : Off/On 
+|     X      |     O      |
+|   1EC   | FX3 Type                         | *T2-1 
+|     X      |     O      |
+|   1ED   | FX3 Edit1                        | 0~127 
+|     O      |     O      |
+|   1EE   | FX3 Edit2                        | 0~127 
+|     O      |     O      |
+|   1EF   | FX3 Motion Seq SW                | 0~63/64~127 : Off/On 
+|     X      |     O      |
+|   1F5   | FX Chain                         | *T2-2 
+|     X      |     O      |
++---------+----------------------------------+------------------------------ 
+-+------------+------------+
+
+
+TABLE26 : MIDI Channel (3byte)
++--------+----------------------------+------------------+
+| Offset | Part                       | Default MIDI Ch  |
++--------+----------------------------+------------------+
+|    0   | Keyboard1                  | 01               |
++--------+----------------------------+------------------+
+|    1   | Keyboard2                  | 02               |
++--------+----------------------------+------------------+
+|    2   | Drum/Stretch/Slice/AudioIn | 10               |
++--------+----------------------------+------------------+
+
+
+TABLE27 : Drum Note Number (13byte)
++--------+-----------+----------------------------+
+| Offset | Part      | Default Note No.[H] (Note) |
++--------+-----------+----------------------------+
+|    0   | Drum1     | 24 ( C2 )                  |
++--------+-----------+----------------------------+
+|    1   | Drum2     | 26 ( D2 )                  |
++--------+-----------+----------------------------+
+|    2   | Drum3     | 28 ( E2 )                  |
++--------+-----------+----------------------------+
+|    3   | Drum4     | 29 ( F2 )                  |
++--------+-----------+----------------------------+
+|    4   | Drum5     | 2B ( G2 )                  |
++--------+-----------+----------------------------+
+|    5   | Drum6A    | 2A ( F#2 )                 |
++--------+-----------+----------------------------+
+|    6   | Drum6B    | 2E ( A#2 )                 |
++--------+-----------+----------------------------+
+|    7   | Drum7A    | 31 ( C#3 )                 |
++--------+-----------+----------------------------+
+|    8   | Drum7B    | 33 ( D#3 )                 |
++--------+-----------+----------------------------+
+|    9   | Stretch1  | 09 ( A-1 )                 |
++--------+-----------+----------------------------+
+|   10   | Stretch2  | 0A ( A#-1 )                |
++--------+-----------+----------------------------+
+|   11   | Slice     | 0B ( B-1 )                 |
++--------+-----------+----------------------------+
+|   12   | AudioIn   | 0C ( C0 )                  |
++--------+-----------+----------------------------+
+
+
+TABLE28 : Control Change Assign Map (33 bytes)
++--------+----------------------+-----------+
+| Offset |    Control           | (default) |
++--------+----------------------+-----------+
+|    0   | MOD SPEED            | CC #89    |
++--------+----------------------+-----------+
+|    1   | MOD DEPTH            | CC #90    |
++--------+----------------------+-----------+
+|    2   | MOD TYPE             | CC #87    |
++--------+----------------------+-----------+
+|    3   | MOD DEST             | CC #88    |
++--------+----------------------+-----------+
+|    4   | MOD BPMSYNC          | CC #82    |
++--------+----------------------+-----------+
+|    5   | FILTER CUTOFF        | CC #74    |
++--------+----------------------+-----------+
+|    6   | FILTER RESONANCE     | CC #71    |
++--------+----------------------+-----------+
+|    7   | FILTER EGINT         | CC #79    |
++--------+----------------------+-----------+
+|    8   | FILTER TYPE          | CC #83    |
++--------+----------------------+-----------+
+|    9   | GLIDE                | CC #5     |
++--------+----------------------+-----------+
+|   10   | PAN                  | CC #10    |
++--------+----------------------+-----------+
+|   11   | EG TIME              | CC #75    |
++--------+----------------------+-----------+
+|   12   | LEVEL                | CC #7     |
++--------+----------------------+-----------+
+|   13   | START POINT          | CC #18    |
++--------+----------------------+-----------+
+|   14   | AMP EG               | CC #86    |
++--------+----------------------+-----------+
+|   15   | ROLL                 | CC #85    |
++--------+----------------------+-----------+
+|   16   | REVERSE              | CC #19    |
++--------+----------------------+-----------+
+|   17   | EFFECT SEND          | CC #91    |
++--------+----------------------+-----------+
+|   18   | EFFECT SELECT        | CC #81    |
++--------+----------------------+-----------+
+|   19   | PART MOTION SEQ      | CC #80    |
++--------+----------------------+-----------+
+|   20   | FX1 TYPE             | CC #12    |
++--------+----------------------+-----------+
+|   21   | FX1 EDIT1            | CC #92    |
++--------+----------------------+-----------+
+|   22   | FX1 EDIT2            | CC #93    |
++--------+----------------------+-----------+
+|   23   | FX1 MOTION SEQ       | CC #20    |
++--------+----------------------+-----------+
+|   24   | FX2 TYPE             | CC #13    |
++--------+----------------------+-----------+
+|   25   | FX2 EDIT1            | CC #94    |
++--------+----------------------+-----------+
+|   26   | FX2 EDIT2            | CC #95    |
++--------+----------------------+-----------+
+|   27   | FX2 MOTION SEQ       | CC #21    |
++--------+----------------------+-----------+
+|   28   | FX3 TYPE             | CC #24    |
++--------+----------------------+-----------+
+|   29   | FX3 EDIT1            | CC #25    |
++--------+----------------------+-----------+
+|   30   | FX3 EDIT2            | CC #26    |
++--------+----------------------+-----------+
+|   31   | FX3 MOTION SEQ       | CC #22    |
++--------+----------------------+-----------+
+|   32   | FX CHAIN             | CC #23    |
++--------+----------------------+-----------+
+
+
+
+
+-Revision History-
+Rev     Date        Description
+1.0     July.15.'03  Initial Release.
+1.1     Sep.09.'03   Fix some mistakes
+
