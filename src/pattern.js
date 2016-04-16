@@ -5,6 +5,7 @@ var Utils = require('./utils');
 var Const = require('./constants');
 var Enum = require('./enum');
 var ESXString = require('./string');
+var DrumPart = require('./drumpart');
 
 var Beat = Enum.enumerate({
 	BEAT_16TH: 0,
@@ -13,13 +14,54 @@ var Beat = Enum.enumerate({
 	BEAT_16TRI:3
 });
 
+// TODO: more descriptive names
+var RollType = Enum.enumerate({
+	ROLL_2: 0,
+	ROLL_3: 1,
+	ROLL_4: 2
+});
+
+var ArpScale = Enum.enumerate({
+	CHROMATIC: 0, // Chromatic
+	IONIAN: 1, // Ionian
+	DORIAN: 2, // Dorian
+	PHRYGIAN: 3, // Phrygian
+	LYDIAN: 4, // Lydian
+	MIXOLYDIAN: 5, // Mixolydian
+	AEOLIAN: 6, // Aeolian
+	LOCRIAN: 7, // Locrian
+	MAJOR_BLUES: 8, // Major Blues
+	MINOR_BLUES: 9, // minor Blues
+	DIMINISH: 10, // Diminish
+	COMBINATION_DIMINISH: 11, // Combination Diminish
+	MAJOR_PENTATONIC: 12, // Major Pentatonic
+	MINOR_PENTATONIC: 13, // minor Pentatonic
+	RAGA_BHAIRAV: 14, // Raga Bhairav
+	RAGA_GAMANASRAMA: 15, // Raga Gamanasrama
+	RAGA_TODI: 16, // Raga Todi
+	SPANISH_SCALE: 17, // Spanish Scale
+	GYPSY_SCALE: 18, // Gypsy Scale
+	ARABIAN_SCALE: 19, // Arabian Scale
+	EGYPTIAN_SCALE: 20, // Egyptian Scale
+	HAWAIIAN_SCALE: 21, // Hawaiian Scale
+	BALI_ISLAND_SCALE: 22, // Bali Island Scale
+	JAPANESE_MIYAKOBUSHI: 23, // Japanese Miyakobushi
+	RYUKYU_SCALE: 24, // Ryukyu Scale
+	WHOLETONE: 25, // Wholetone
+	MINOR_3RD_INTERVAL: 26, // m3rd Interval
+	MAJOR_3RD_INTERVAL: 27, // M3rd Interval
+	FOURTH_INTERVAL: 28, // 4th Interval
+	FIFTH_INTERVAL: 29, // 5th Interval
+	OCTAVE_INTERVAL: 30, // Octave Interval
+});
+
 class PatternFlags {
 	constructor(value) {
 		this._value = value;
 		this.patternLength = Utils.unpackInt(value, 3, 0); // 0-7 -> 1-8
 		this._reserved = Utils.unpackInt(value, 1, 3);
 		this.beat = new Beat(Utils.unpackInt(value, 2, 4));
-		this.rollType = Utils.unpackInt(value, 2, 6);
+		this.rollType = new RollType(Utils.unpackInt(value, 2, 6));
 	}
 
 	serialize() {
@@ -31,7 +73,7 @@ class PatternFlags {
 class ArpFlags {
 	constructor(value) {
 		this._value = value;
-		this.arpScale = Utils.unpackInt(value, 5, 0);
+		this.arpScale = new ArpScale(Utils.unpackInt(value, 5, 0));
 		this._reserved = Utils.unpackInt(value, 3, 5);
 	}
 
@@ -94,103 +136,27 @@ var Swing = Enum.uint8({
 	SWING_75: 25,
 });
 
-class DrumFlags0 {
-	constructor(value) {
-		this.value = value;
+var FXChain = Enum.uint8({
+	FX_None:  0, // None
+	FX_1_2:   1, // 1 -> 2
+	FX_2_3:   2, // 2 -> 3
+	FX_1_2_3: 3, // 1 -> 2 -> 3
+});
 
-		// TODO: enums
-		this.FxSelect = Utils.unpackInt(value, 2, 0);
-		this.FxSend = Utils.unpackInt(value, 1, 2);
-		this.Roll = Utils.unpackInt(value, 1, 3);
-		this.AmpEg = Utils.unpackInt(value, 1, 4);
-		this.Reverse = Utils.unpackInt(value, 1, 5);
-		this.ReservedBitsAfterReverse = Utils.unpackInt(value, 2, 6);
-	}
-
-	serialize() {
-		// TODO: pack
-		return this.value;
-	}
-}
-
-class DrumFlags1 {
-	constructor(value) {
-		this.value = value;
-
-		// TODO: enums
-		this.ModDest = Utils.unpackInt(value, 3, 0);
-		this.ReservedBitAfterModDepth = Utils.unpackInt(value, 1, 3);
-		this.ModType = Utils.unpackInt(value, 3, 4);
-		this.BpmSync = Utils.unpackInt(value, 1, 7);
-	}
-
-	serialize() {
-		// TODO: pack
-		return this.value;
-	}
-}
-
-// Reference: TABLE23
-class DrumSequenceSteps {
-	constructor(data) {
-		this.data = data;
-		this.steps = [];
-		for (var i = 7; i >= 0; i--) {
-			this.steps.push( data & (1 << i) ? 1 : 0 );
-		}
-	}
-
-	serialize() {
-		return data;
-	}
-}
-
-var DrumSequenceBar = new Format()
-	.uint8('steps', DrumSequenceSteps);
-
-var DrumPart = new Format()
-	// .buffer('data', Const.CHUNKSIZE_PARTS_DRUM);
-	.uint16BE('samplepointer')
-	.uint8('slicenumber')
-
-	// There is conflicting info on this in the "ESX1_Midi_Imp.txt" file
-	// TABLE6 says "reserved", but TABLE1 infers byte2 and byte3 are
-	// sliceNumber
-	.uint8('_unknown0')
-	.uint8('filtertype') // TODO: enum
-	.uint8('cutoff')
-	.uint8('resonance')
-	.uint8('egint')
-	.uint8('pitch')
-	.uint8('level')
-	.uint8('pan')
-	.uint8('egtime')
-	.uint8('startpoint')
-	.uint8('flags0', DrumFlags0) // TODO: better name
-	.uint8('flags1', DrumFlags1) // TODO: better name
-	.uint8('modspeed')
-	.uint8('moddepth')
-	.uint8('motionseqstatus')
-	.list('sequencedata', Const.NUM_SEQUENCE_DATA, DrumSequenceBar)
-	;
-
+// TODO
 var KeyboardParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
-
 var StretchSliceParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_STRETCHSLICE);
-
 var AudioInParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_AUDIOIN);
-
 var AccentParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_ACCENT);
-
 var FXParam = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARAMETERS_FX);
-
 var MotionParam = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARAMETERS_MOTION);
+
 
 var PatternParts = new Format()
 	.list('drum', Const.NUM_PARTS_DRUM, DrumPart)
@@ -207,7 +173,7 @@ var Pattern = new Format()
 	.uint16BE('tempo', Tempo)
 	.nest('swing', Swing)
 	.uint8('flags', PatternFlags)
-	.uint8('fxchain')
+	.nest('fxchain', FXChain)
 	.uint8('laststep')
 	.uint8('arpflags', ArpFlags)
 	.uint8('arpcenternote')
