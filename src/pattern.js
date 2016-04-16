@@ -6,6 +6,7 @@ var Const = require('./constants');
 var Enum = require('./enum');
 var ESXString = require('./string');
 var DrumPart = require('./drumpart');
+var NoteNumber = require('./notenumber');
 
 var Beat = Enum.enumerate({
 	BEAT_16TH: 0,
@@ -174,9 +175,9 @@ var Pattern = new Format()
 	.nest('swing', Swing)
 	.uint8('flags', PatternFlags)
 	.nest('fxchain', FXChain)
-	.uint8('laststep')
+	.uint8('laststep') // 0-15
 	.uint8('arpflags', ArpFlags)
-	.uint8('arpcenternote')
+	.nest('arpcenternote', NoteNumber)
 	.uint16LE('mutestatus')
 	.uint16LE('swingstatus')
 	.uint16LE('outputbusstatus')
