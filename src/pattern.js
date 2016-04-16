@@ -144,6 +144,22 @@ var FXChain = Enum.uint8({
 	FX_1_2_3: 3, // 1 -> 2 -> 3
 });
 
+// TABLE22
+class PartStatusParameters {
+	constructor(data) {
+		this.data = data;
+		this.flags = [];
+		for (var i = 15; i >= 0; i--) {
+			this.flags.push( data & (1 << i) ? 1 : 0 );
+		}
+	}
+
+	serialize() {
+		// TODO: pack
+		return data;
+	}
+}
+
 // TODO
 var KeyboardParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
@@ -178,10 +194,10 @@ var Pattern = new Format()
 	.uint8('laststep') // 0-15
 	.uint8('arpflags', ArpFlags)
 	.nest('arpcenternote', NoteNumber)
-	.uint16LE('mutestatus')
-	.uint16LE('swingstatus')
-	.uint16LE('outputbusstatus')
-	.uint16LE('accentstatus')
+	.uint16LE('mutestatus', PartStatusParameters) // TODO: specific accessors
+	.uint16LE('swingstatus', PartStatusParameters)
+	.uint16LE('outputbusstatus', PartStatusParameters)
+	.uint16LE('accentstatus', PartStatusParameters)
 	.nest('parts', PatternParts)
 	;
 
