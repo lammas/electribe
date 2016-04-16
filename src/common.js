@@ -22,6 +22,19 @@ class MSBOff8 {
 	}
 }
 
+class MSBOff16BE {
+	constructor(data) {
+		this.data = data;
+		this.value = data & Utils.mask(0, 14);
+		this.off = (data & (1 << 15)) > 0;
+	}
+
+	serialize() {
+		// TODO: pack values
+		return this.data;
+	}
+}
+
 var FilterType = Enum.uint8({
 	LPF: 0, // LPF
 	HPF: 1, // HPF
@@ -131,6 +144,7 @@ module.exports = {
 	ModType: ModType,
 
 	MSBOff8: MSBOff8,
+	MSBOff16BE: MSBOff16BE,
 	SamplePointer: SamplePointer,
 	SliceNumber: SliceNumber,
 };
