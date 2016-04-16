@@ -5,7 +5,20 @@ var Utils = require('./utils');
 var Const = require('./constants');
 var Enum = require('./enum');
 
-class DrumFlags0 {
+var FilterType = Enum.uint8({
+	LPF: 0, // LPF
+	HPF: 1, // HPF
+	BPF: 2, // BPF
+	BPF_PLUS: 3 // BPF+
+});
+
+var MotionSequenceStatus = Enum.uint8({
+	OFF: 0,
+	SMOOTH: 1,
+	TRIGHOLD: 2
+});
+
+class FXFlags {
 	constructor(value) {
 		this.value = value;
 
@@ -24,7 +37,7 @@ class DrumFlags0 {
 	}
 }
 
-class DrumFlags1 {
+class ModFlags {
 	constructor(value) {
 		this.value = value;
 
@@ -60,28 +73,26 @@ var DrumSequenceBar = new Format()
 	.uint8('steps', DrumSequenceSteps);
 
 var DrumPart = new Format()
-	// .buffer('data', Const.CHUNKSIZE_PARTS_DRUM);
 	.uint16BE('samplepointer')
 	.uint8('slicenumber')
-
 	// There is conflicting info on this in the "ESX1_Midi_Imp.txt" file
 	// TABLE6 says "reserved", but TABLE1 infers byte2 and byte3 are
 	// sliceNumber
 	.uint8('_unknown0')
-	.uint8('filtertype') // TODO: enum
-	.uint8('cutoff')
-	.uint8('resonance')
-	.uint8('egint')
-	.uint8('pitch')
-	.uint8('level')
-	.uint8('pan')
-	.uint8('egtime')
-	.uint8('startpoint')
-	.uint8('flags0', DrumFlags0) // TODO: better name
-	.uint8('flags1', DrumFlags1) // TODO: better name
-	.uint8('modspeed')
-	.uint8('moddepth')
-	.uint8('motionseqstatus')
+	.nest('filtertype', FilterType)
+	.uint8('cutoff') // 0-127
+	.uint8('resonance') // 0-127
+	.uint8('egint') // 0~64~127 : -63~0~+63
+	.uint8('pitch') // 0~127 (64=equal pitch)
+	.uint8('level') // 0-127
+	.uint8('pan') // 0~127 (64=center)
+	.uint8('egtime') // 0-127
+	.uint8('startpoint') // 0-127
+	.uint8('fxflags', FXFlags)
+	.uint8('modflags', ModFlags)
+	.uint8('modspeed') // 0-127
+	.uint8('moddepth') // 0~64~127 : -63~0~+63
+	.nest('motionseqstatus', MotionSequenceStatus) // 0~2 : Off/Smooth/TrigHold
 	.list('sequencedata', Const.NUM_SEQUENCE_DATA, DrumSequenceBar)
 	;
 

@@ -505,7 +505,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0C  15  | Drum1 Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0C  16  | Drum1 Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0C  17  | Drum1 Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0C  20  | Drum2 Sample                     | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0C  22  | Drum2 Slice No.                  | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0C  24  | Drum2 Pitch                      | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -528,7 +528,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0C  35  | Drum2 Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0C  36  | Drum2 Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0C  37  | Drum2 Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0C  40  | Drum3 Sample                     | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0C  42  | Drum3 Slice No.                  | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0C  44  | Drum3 Pitch                      | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -551,7 +551,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0C  55  | Drum3 Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0C  56  | Drum3 Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0C  57  | Drum3 Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0C  60  | Drum4 Sample                     | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0C  62  | Drum4 Slice No.                  | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0C  64  | Drum4 Pitch                      | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -574,7 +574,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0C  75  | Drum4 Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0C  76  | Drum4 Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0C  77  | Drum4 Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0D  00  | Drum5 Sample                     | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0D  02  | Drum5 Slice No.                  | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0D  04  | Drum5 Pitch                      | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -597,7 +597,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0D  15  | Drum5 Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0D  16  | Drum5 Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0D  17  | Drum5 Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0D  20  | Drum6A Sample                    | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0D  22  | Drum6A Slice No.                 | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0D  24  | Drum6A Pitch                     | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -620,7 +620,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0D  35  | Drum6A Modulation Destination    | Drum     |  MSB       | *T1-5                        |
 | 0D  36  | Drum6A Modulation BPM Sync       | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0D  37  | Drum6A Motion Seq Type           | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0D  40  | Drum6B Sample                    | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0D  42  | Drum6B Slice No.                 | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0D  44  | Drum6B Pitch                     | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -643,7 +643,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0D  55  | Drum6B Modulation Destination    | Drum     |  MSB       | *T1-5                        |
 | 0D  56  | Drum6B Modulation BPM Sync       | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0D  57  | Drum6B Motion Seq Type           | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0D  60  | Drum7A Sample                    | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0D  62  | Drum7A Slice No.                 | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0D  64  | Drum7A Pitch                     | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -666,7 +666,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0D  75  | Drum7A Modulation Destination    | Drum     |  MSB       | *T1-5                        |
 | 0D  76  | Drum7A Modulation BPM Sync       | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0D  77  | Drum7A Motion Seq Type           | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0E  00  | Drum7B Sample                    | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0E  02  | Drum7B Slice No.                 | Drum     |  MSB,LSB   | 16383 : ALL (*T1-1)          |
 | 0E  04  | Drum7B Pitch                     | Drum     |  MSB       | 0~127 (64=equal pitch)       |
@@ -689,10 +689,10 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0E  15  | Drum7B Modulation Destination    | Drum     |  MSB       | *T1-5                        |
 | 0E  16  | Drum7B Modulation BPM Sync       | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0E  17  | Drum7B Motion Seq Type           | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0E  20  | Keyboard Sample                  | Keyboard |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0E  22  | Keyboard Slice No .              | Keyboard |  MSB,LSB   | 16383 : ALL (*T1-1)          |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0E  60  | Stretch1 Sample                  | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0E  64  | Stretch1 Pitch                   | Drum     |  MSB       | 0~127 (64=equal pitch)       |
 | 0E  65  | Stretch1 Filter Type             | Drum     |  MSB       | *T1-2                        |
@@ -714,7 +714,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0E  75  | Stretch1 Modulation Destination  | Drum     |  MSB       | *T1-5                        |
 | 0E  76  | Stretch1 Modulation BPM Sync     | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0E  77  | Stretch1 Motion Seq Type         | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0F  00  | Stretch2 Sample                  | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0F  04  | Stretch2 Pitch                   | Drum     |  MSB       | 0~127 (64=equal pitch)       |
 | 0F  05  | Stretch2 Filter Type             | Drum     |  MSB       | *T1-2                        |
@@ -736,7 +736,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0F  15  | Stretch2 Modulation Destination  | Drum     |  MSB       | *T1-5                        |
 | 0F  16  | Stretch2 Modulation BPM Sync     | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0F  17  | Stretch2 Motion Seq Type         | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0F  20  | Slice Sample                     | Drum     |  MSB,LSB   | 16383 : Sample OFF (*T1-1)   |
 | 0F  24  | Slice Pitch                      | Drum     |  MSB       | 0~127 (64=equal pitch)       |
 | 0F  25  | Slice Filter Type                | Drum     |  MSB       | *T1-2                        |
@@ -758,10 +758,10 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0F  35  | Slice Modulation Destination     | Drum     |  MSB       | *T1-5                        |
 | 0F  36  | Slice Modulation BPM Sync        | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0F  37  | Slice Motion Seq Type            | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0F  45  | AudioIn Filter Type              | Drum     |  MSB       | *T1-2                        |
 | 0F  46  | AudioIn Filter Cutoff            | Drum     |  MSB       | 0~127                        |
-| 0F  47  | AudioIn Filter Resonance         | Drum     |  MSB       | 0~127                    |
+| 0F  47  | AudioIn Filter Resonance         | Drum     |  MSB       | 0~127                        |
 | 0F  48  | AudioIn Filter EG Int            | Drum     |  MSB       | 0~64~127 : -63~0~63          |
 | 0F  4A  | AudioIn Level                    | Drum     |  MSB       | 0~127                        |
 | 0F  4B  | AudioIn Pan                      | Drum     |  MSB       | 0~127 (64=center)            |
@@ -776,7 +776,7 @@ TABLE1 : NON REGISTERED PARAMETER NUMBER (NRPN)
 | 0F  55  | AudioIn Modulation Destination   | Drum     |  MSB       | *T1-7                        |
 | 0F  56  | AudioIn Modulation BPM Sync      | Drum     |  MSB       | 0~63/64~127 : Off/On         |
 | 0F  57  | AudioIn Motion Seq Type          | Drum     |  MSB       | *T1-6                        |
-|         |                                  |          |            | |
+|         |                                  |          |            |                              |
 | 0F  60  | Accent Level                     | Global   |  MSB       | 0~127                        |
 | 0F  61  | Accent Motion Seq SW             | Global   |  MSB       | 0~42/43~127 : Off/Trig Hold  |
 | 0F  70  | Swing                            | Global   |  MSB       | *T1-8                        |
