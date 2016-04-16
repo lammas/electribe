@@ -46,14 +46,27 @@ class FXFlags {
 	}
 }
 
+var ModDest = Enum.enumerate({
+	PITCH: 0,
+	CUTOFF: 1,
+	AMP: 2,
+	PAN: 3
+});
+
+var ModType = Enum.enumerate({
+	SAWTOOTH: 0,
+	SQUARE: 1,
+	TRIANGLE: 2,
+	SAMPLEANDHOLD: 3,
+	ENVELOPE: 4
+});
+
 class ModFlags {
 	constructor(value) {
 		this.value = value;
-
-		// TODO: enums
-		this.ModDest = Utils.unpackInt(value, 3, 0);
+		this.ModDest = new ModDest(Utils.unpackInt(value, 3, 0));
 		this.ReservedBitAfterModDepth = Utils.unpackInt(value, 1, 3);
-		this.ModType = Utils.unpackInt(value, 3, 4);
+		this.ModType = new ModType(Utils.unpackInt(value, 3, 4));
 		this.BpmSync = Utils.unpackInt(value, 1, 7);
 	}
 
