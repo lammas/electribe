@@ -9,6 +9,7 @@ var NoteNumber = require('./notenumber');
 
 var DrumPart = require('./drumpart');
 var KeyboardPart = require('./keyboardpart');
+var StretchSlicePart = require('./stretchslicepart');
 
 var Beat = Enum.enumerate({
 	BEAT_16TH: 0,
@@ -163,8 +164,6 @@ class PartStatusParameters {
 }
 
 // TODO
-var StretchSliceParts = new Format()
-	.buffer('data', Const.CHUNKSIZE_PARTS_STRETCHSLICE);
 var AudioInParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_AUDIOIN);
 var AccentParts = new Format()
@@ -178,7 +177,7 @@ var MotionParam = new Format()
 var PatternParts = new Format()
 	.list('drum', Const.NUM_PARTS_DRUM, DrumPart)
 	.list('keyboard', Const.NUM_PARTS_KEYBOARD, KeyboardPart)
-	.list('stretchslice', Const.NUM_PARTS_STRETCHSLICE, StretchSliceParts)
+	.list('stretchslice', Const.NUM_PARTS_STRETCHSLICE, StretchSlicePart)
 	.list('audioin', Const.NUM_PARTS_AUDIOIN, AudioInParts)
 	.list('accent', Const.NUM_PARTS_ACCENT, AccentParts)
 	.list('fxparam', Const.NUM_PARAMETERS_FX, FXParam)
