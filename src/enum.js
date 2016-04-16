@@ -1,5 +1,7 @@
 'use strict';
 
+var Format = require('bin-format');
+
 function enumerate(values) {
 	var C = class {
 		constructor(value) {
@@ -39,4 +41,13 @@ function enumerate(values) {
 	return C;
 }
 
-module.exports = enumerate;
+
+function enum_uint8(values) {
+	return new Format()
+		.uint8('value', enumerate(values));
+}
+
+module.exports = {
+	enumerate: enumerate,
+	uint8: enum_uint8
+};

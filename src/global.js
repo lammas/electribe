@@ -4,7 +4,7 @@ var Format = require('bin-format');
 
 var Const = require('./constants');
 var Utils = require('./utils');
-var Enum = require('./enumparser');
+var Enum = require('./enum');
 var MappedList = require('./mappedlist');
 
 var EnabledFlag = Enum.uint8({

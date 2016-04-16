@@ -3,14 +3,22 @@
 var Format = require('bin-format');
 var Utils = require('./utils');
 var Const = require('./constants');
+var Enum = require('./enum');
 var ESXString = require('./string');
+
+var Beat = Enum.enumerate({
+	BEAT_16TH: 0,
+	BEAT_32ND: 1,
+	BEAT_8TRI: 2,
+	BEAT_16TRI:3
+});
 
 class PatternFlags {
 	constructor(value) {
 		this._value = value;
-		this.patternLength = Utils.unpackInt(value, 3, 0);
+		this.patternLength = Utils.unpackInt(value, 3, 0); // 0-7 -> 1-8
 		this._reserved = Utils.unpackInt(value, 1, 3);
-		this.beat = Utils.unpackInt(value, 2, 4);
+		this.beat = new Beat(Utils.unpackInt(value, 2, 4));
 		this.rollType = Utils.unpackInt(value, 2, 6);
 	}
 
@@ -32,6 +40,59 @@ class ArpFlags {
 		return this._value;
 	}
 }
+
+class Tempo {
+	constructor(value) {
+		this.value = value;
+		var tempoWhole = Utils.unpackInt(value, 9, 7);
+		var tempoDecimal = Utils.unpackInt(value, 4, 0);
+
+		// valid tempoDecimal values are between 0-9
+		if (tempoDecimal > 9 || tempoDecimal < 0)
+			tempoDecimal = 0;
+
+		// valid tempoWhole values are between 20-300
+		if (tempoWhole < 20)
+			tempoWhole = 20;
+		if (tempoWhole > 300)
+			tempoWhole = 300;
+
+		this.tempo = parseFloat('' + tempoWhole + '.' + tempoDecimal);
+	}
+
+	serialize() {
+		return this.value;
+	}
+}
+
+var Swing = Enum.uint8({
+	SWING_50: 0,
+	SWING_51: 1,
+	SWING_52: 2,
+	SWING_53: 3,
+	SWING_54: 4,
+	SWING_55: 5,
+	SWING_56: 6,
+	SWING_57: 7,
+	SWING_58: 8,
+	SWING_59: 9,
+	SWING_60: 10,
+	SWING_61: 11,
+	SWING_62: 12,
+	SWING_63: 13,
+	SWING_64: 14,
+	SWING_65: 15,
+	SWING_66: 16,
+	SWING_67: 17,
+	SWING_68: 18,
+	SWING_69: 19,
+	SWING_70: 20,
+	SWING_71: 21,
+	SWING_72: 22,
+	SWING_73: 23,
+	SWING_74: 24,
+	SWING_75: 25,
+});
 
 class DrumFlags0 {
 	constructor(value) {
@@ -111,12 +172,7 @@ var DrumPart = new Format()
 	.uint8('moddepth')
 	.uint8('motionseqstatus')
 	.list('sequencedata', Const.NUM_SEQUENCE_DATA, DrumSequenceBar)
-	// .buffer('sequencedata', Const.NUM_SEQUENCE_DATA)
 	;
-	// the sequencedata is 16 bytes
-	// each drum part has 8 * 16 (128) steps
-	// which would imply that every bit represents one on/off value
-	// TODO: where is the number of bars (Pattern > Length on ESX)
 
 var KeyboardParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
@@ -146,36 +202,10 @@ var PatternParts = new Format()
 	.list('motionparam', Const.NUM_PARAMETERS_MOTION, MotionParam)
 	;
 
-class Tempo {
-	constructor(value) {
-		this.value = value;
-
-		// iiiiiiii i000ffff
-		var tempoWhole = Utils.unpackInt(value, 9, 7);
-		var tempoDecimal = Utils.unpackInt(value, 4, 0);
-
-		// valid tempoDecimal values are between 0-9
-		if (tempoDecimal > 9 || tempoDecimal < 0)
-			tempoDecimal = 0;
-
-		// valid tempoWhole values are between 20-300
-		if (tempoWhole < 20)
-			tempoWhole = 20;
-		if (tempoWhole > 300)
-			tempoWhole = 300;
-
-		this.tempo = parseFloat('' + tempoWhole + '.' + tempoDecimal);
-	}
-
-	serialize() {
-		return this.value;
-	}
-}
-
 var Pattern = new Format()
 	.buffer('name', 8, ESXString)
 	.uint16BE('tempo', Tempo)
-	.uint8('swing')
+	.nest('swing', Swing)
 	.uint8('flags', PatternFlags)
 	.uint8('fxchain')
 	.uint8('laststep')
