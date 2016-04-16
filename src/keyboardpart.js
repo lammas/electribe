@@ -11,11 +11,11 @@ var SequenceGate = new Format()
 
 // Reference: TABLE7
 var KeyboardPart = new Format()
-	.uint16BE('samplepointer')
-	.uint8('slicenumber')
+	.uint16BE('samplepointer', Common.SamplePointer)
+	.uint16BE('slicenumber', Common.SliceNumber)
 	// There is conflicting info on this in the "ESX1_Midi_Imp.txt" file
 	// TABLE6 says "reserved", but TABLE1 infers byte2 and byte3 are sliceNumber
-	.uint8('_unknown0')
+	// .uint8('_unknown0')
 
 	.uint8('glide', Common.MSBOff8) // 0~127 : Off,1~127
 	.nest('filtertype', Common.FilterType)

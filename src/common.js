@@ -93,6 +93,30 @@ class ModFlags {
 	}
 }
 
+class SamplePointer {
+	constructor(data) {
+		this.data = data;
+		this.sample = Utils.mask(0, 14) & data;
+		this.off = ((1 << 15) & data) > 0;
+	}
+
+	serialize() {
+		return this.data;
+	}
+}
+
+class SliceNumber {
+	constructor(data) {
+		this.data = data;
+		this.slice = Utils.mask(0, 14) & data;
+		this.all = ((1 << 15) & data) > 0;
+	}
+
+	serialize() {
+		return this.data;
+	}
+}
+
 module.exports = {
 	EnabledFlag: EnabledFlag,
 	NoteNumber: NoteNumber,
@@ -107,4 +131,6 @@ module.exports = {
 	ModType: ModType,
 
 	MSBOff8: MSBOff8,
+	SamplePointer: SamplePointer,
+	SliceNumber: SliceNumber,
 };
