@@ -6,6 +6,7 @@ var Const = require('./constants');
 var Utils = require('./utils');
 var Enum = require('./enum');
 var MappedList = require('./mappedlist');
+var NoteNumber = require('./notenumber');
 
 var EnabledFlag = Enum.uint8({
 	DISABLED: 0,
@@ -76,6 +77,16 @@ var GlobalParametersFlagsFormat = new Format()
 	.uint8('value', GlobalParametersFlags);
 
 
+// TABLE26 : MIDI Channel (3byte)
+// +--------+----------------------------+------------------+
+// | Offset | Part                       | Default MIDI Ch  |
+// +--------+----------------------------+------------------+
+// |    0   | Keyboard1                  | 01               |
+// +--------+----------------------------+------------------+
+// |    1   | Keyboard2                  | 02               |
+// +--------+----------------------------+------------------+
+// |    2   | Drum/Stretch/Slice/AudioIn | 10               |
+// +--------+----------------------------+------------------+
 var MidiChannels = MappedList.uint8(
 	[
 		'keyboard1',
@@ -85,7 +96,7 @@ var MidiChannels = MappedList.uint8(
 	Const.NUM_MIDI_CHANNELS,
 	'channel');
 
-var PartNoteNumbers = MappedList.uint8(
+var PartNoteNumbers = MappedList.format(
 	[
 		'Drum1',
 		'Drum2',
@@ -102,6 +113,7 @@ var PartNoteNumbers = MappedList.uint8(
 		'AudioIn'
 	],
 	Const.NUM_PART_NOTE_NUMBERS,
+	NoteNumber,
 	'part');
 
 var MidiControlChangeAssignments = MappedList.uint8(
@@ -145,6 +157,7 @@ var MidiControlChangeAssignments = MappedList.uint8(
 
 var PatternSetParameters = MappedList.uint8([], Const.NUM_PATTERN_SET_PARAMETERS, 'pattern');
 
+// TABLE13
 var GlobalParameters = new Format()
 	.nest('memoryProtectEnabled', EnabledFlag)
 	.uint8('_unknown0')
@@ -158,7 +171,6 @@ var GlobalParameters = new Format()
 	.nest('midiControlChangeAssignments', MidiControlChangeAssignments)
 	.buffer('_unknown1', 8)
 	.nest('patternSetParameters', PatternSetParameters)
-	// .skip(179 + 3)
 	;
 
 module.exports = GlobalParameters;

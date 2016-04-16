@@ -12,6 +12,17 @@ function mappedlist_uint8(names, length, fallbackPrefix) {
 	return fmt;
 }
 
+function mappedlist_format(names, length, format, fallbackPrefix) {
+	fallbackPrefix = fallbackPrefix || 'unknown';
+	var fmt = new Format();
+	for (var i = 0; i < length; i++) {
+		var name = i<names.length ? names[i] : (fallbackPrefix + i)
+		fmt.nest(name, format);
+	}
+	return fmt;
+}
+
 module.exports = {
-	uint8: mappedlist_uint8
+	format: mappedlist_format,
+	uint8: mappedlist_uint8,
 };
