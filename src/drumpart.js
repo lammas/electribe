@@ -18,15 +18,24 @@ var MotionSequenceStatus = Enum.uint8({
 	TRIGHOLD: 2
 });
 
+var FXSelect = Enum.enumerate({
+	FX1: 0,
+	FX2: 1,
+	FX3: 2
+});
+
+var AmpEg = Enum.enumerate({
+	GATE: 0,
+	EG: 1
+});
+
 class FXFlags {
 	constructor(value) {
 		this.value = value;
-
-		// TODO: enums
-		this.FxSelect = Utils.unpackInt(value, 2, 0);
+		this.FxSelect = new FXSelect(Utils.unpackInt(value, 2, 0));
 		this.FxSend = Utils.unpackInt(value, 1, 2);
 		this.Roll = Utils.unpackInt(value, 1, 3);
-		this.AmpEg = Utils.unpackInt(value, 1, 4);
+		this.AmpEg = new AmpEg(Utils.unpackInt(value, 1, 4));
 		this.Reverse = Utils.unpackInt(value, 1, 5);
 		this.ReservedBitsAfterReverse = Utils.unpackInt(value, 2, 6);
 	}
