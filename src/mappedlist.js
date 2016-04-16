@@ -2,12 +2,12 @@
 
 var Format = require('bin-format');
 
-function mappedlist_uint8(names, length, fallbackPrefix) {
+function mappedlist_uint8(names, length, fallbackPrefix, constructor) {
 	fallbackPrefix = fallbackPrefix || 'unknown';
 	var fmt = new Format();
 	for (var i = 0; i < length; i++) {
 		var name = i<names.length ? names[i] : (fallbackPrefix + i)
-		fmt.uint8(name);
+		fmt.uint8(name, constructor);
 	}
 	return fmt;
 }

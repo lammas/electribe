@@ -6,12 +6,12 @@ function enumerate(values) {
 	var C = class {
 		constructor(value) {
 			if (!this.isValid(value))
-				throw new Error('Invalid value: ' + value + ' (' + typeof(value) + ')');
-			this._value = value;
+				throw new Error('Invalid value: ' + value + ' (' + typeof(value) + ')\n\t' + this.toString());
+			this.value = value;
 		}
 
 		serialize() {
-			return this._value;
+			return this.value;
 		}
 
 		isValid(value) {
@@ -20,13 +20,17 @@ function enumerate(values) {
 			return true;
 		}
 
-		toString() {
-			if (this._value === null)
-				return "null";
-			var idx = C.values.indexOf(this._value);
+		get name() {
+			if (this.value === null)
+				return 'null';
+			var idx = C.values.indexOf(this.value);
 			if (idx == -1)
-				return "invalid";
+				return 'invalid';
 			return C.names[idx];
+		}
+
+		toString() {
+			return 'Enum: ' + this.name + ' @ [' + C.names.join(', ') + ']';
 		}
 	};
 

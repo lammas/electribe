@@ -16,6 +16,15 @@ function packInt(packedInt, inputValue, numBits, numShiftedLeft) {
 	return packedInt;
 }
 
+function mask(start, end) {
+	var m = 0;
+	for (var i = start; i <= end; i++)
+		m |= 1 << i;
+	return m;
+}
+
 module.exports = {
-	unpackInt: unpackInt
+	unpackInt: unpackInt,
+	packInt: packInt,
+	mask: mask,
 };

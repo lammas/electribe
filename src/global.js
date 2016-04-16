@@ -6,12 +6,7 @@ var Const = require('./constants');
 var Utils = require('./utils');
 var Enum = require('./enum');
 var MappedList = require('./mappedlist');
-var NoteNumber = require('./notenumber');
-
-var EnabledFlag = Enum.uint8({
-	DISABLED: 0,
-	ENABLED: 1
-});
+var Common = require('./common');
 
 var ArpeggiatorControl = Enum.uint8({
 	NORMAL: 0,
@@ -96,7 +91,7 @@ var MidiChannels = MappedList.uint8(
 	Const.NUM_MIDI_CHANNELS,
 	'channel');
 
-var PartNoteNumbers = MappedList.format(
+var PartNoteNumbers = MappedList.uint8(
 	[
 		'Drum1',
 		'Drum2',
@@ -113,8 +108,8 @@ var PartNoteNumbers = MappedList.format(
 		'AudioIn'
 	],
 	Const.NUM_PART_NOTE_NUMBERS,
-	NoteNumber,
-	'part');
+	'part',
+	Common.NoteNumber);
 
 var MidiControlChangeAssignments = MappedList.uint8(
 	[
@@ -159,7 +154,7 @@ var PatternSetParameters = MappedList.uint8([], Const.NUM_PATTERN_SET_PARAMETERS
 
 // TABLE13
 var GlobalParameters = new Format()
-	.nest('memoryProtectEnabled', EnabledFlag)
+	.nest('memoryProtectEnabled', Common.EnabledFlag)
 	.uint8('_unknown0')
 	.nest('arpeggiatorControl', ArpeggiatorControl)
 	.nest('audioInMode', AudioInMode)

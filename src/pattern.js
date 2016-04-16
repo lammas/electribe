@@ -5,8 +5,10 @@ var Utils = require('./utils');
 var Const = require('./constants');
 var Enum = require('./enum');
 var ESXString = require('./string');
-var DrumPart = require('./drumpart');
 var NoteNumber = require('./notenumber');
+
+var DrumPart = require('./drumpart');
+var KeyboardPart = require('./keyboardpart');
 
 var Beat = Enum.enumerate({
 	BEAT_16TH: 0,
@@ -161,8 +163,6 @@ class PartStatusParameters {
 }
 
 // TODO
-var KeyboardParts = new Format()
-	.buffer('data', Const.CHUNKSIZE_PARTS_KEYBOARD);
 var StretchSliceParts = new Format()
 	.buffer('data', Const.CHUNKSIZE_PARTS_STRETCHSLICE);
 var AudioInParts = new Format()
@@ -177,7 +177,7 @@ var MotionParam = new Format()
 
 var PatternParts = new Format()
 	.list('drum', Const.NUM_PARTS_DRUM, DrumPart)
-	.list('keyboard', Const.NUM_PARTS_KEYBOARD, KeyboardParts)
+	.list('keyboard', Const.NUM_PARTS_KEYBOARD, KeyboardPart)
 	.list('stretchslice', Const.NUM_PARTS_STRETCHSLICE, StretchSliceParts)
 	.list('audioin', Const.NUM_PARTS_AUDIOIN, AudioInParts)
 	.list('accent', Const.NUM_PARTS_ACCENT, AccentParts)
@@ -193,7 +193,7 @@ var Pattern = new Format()
 	.nest('fxchain', FXChain)
 	.uint8('laststep') // 0-15
 	.uint8('arpflags', ArpFlags)
-	.nest('arpcenternote', NoteNumber)
+	.uint8('arpcenternote', NoteNumber)
 	.uint16LE('mutestatus', PartStatusParameters) // TODO: specific accessors
 	.uint16LE('swingstatus', PartStatusParameters)
 	.uint16LE('outputbusstatus', PartStatusParameters)

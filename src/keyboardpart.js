@@ -4,39 +4,24 @@ var Format = require('bin-format');
 var Utils = require('./utils');
 var Const = require('./constants');
 var Enum = require('./enum');
-
 var Common = require('./common');
 
-// Reference: TABLE23
-class DrumSequenceSteps {
-	constructor(data) {
-		this.data = data;
-		this.steps = [];
-		for (var i = 7; i >= 0; i--) {
-			this.steps.push( data & (1 << i) ? 1 : 0 );
-		}
-	}
+var SequenceGate = new Format()
+	.uint8('gate');
 
-	serialize() {
-		return data;
-	}
-}
-
-var DrumSequenceBar = new Format()
-	.uint8('steps', DrumSequenceSteps);
-
-var DrumPart = new Format()
+// Reference: TABLE7
+var KeyboardPart = new Format()
 	.uint16BE('samplepointer')
 	.uint8('slicenumber')
 	// There is conflicting info on this in the "ESX1_Midi_Imp.txt" file
 	// TABLE6 says "reserved", but TABLE1 infers byte2 and byte3 are sliceNumber
 	.uint8('_unknown0')
 
+	.uint8('glide', Common.MSBOff8) // 0~127 : Off,1~127
 	.nest('filtertype', Common.FilterType)
 	.uint8('cutoff') // 0-127
 	.uint8('resonance') // 0-127
 	.uint8('egint') // 0~64~127 : -63~0~+63
-	.uint8('pitch') // 0~127 (64=equal pitch)
 	.uint8('level') // 0-127
 	.uint8('pan') // 0~127 (64=center)
 	.uint8('egtime') // 0-127
@@ -46,7 +31,8 @@ var DrumPart = new Format()
 	.uint8('modspeed') // 0-127
 	.uint8('moddepth') // 0~64~127 : -63~0~+63
 	.nest('motionseqstatus', Common.MotionSequenceStatus) // 0~2 : Off/Smooth/TrigHold
-	.list('sequencedata', Const.NUM_SEQUENCE_DATA, DrumSequenceBar)
+	.list('sequenceNote', Const.NUM_SEQUENCE_DATA_NOTE, new Format().uint8('note', Common.NoteNumber))
+	.list('sequenceGate', Const.NUM_SEQUENCE_DATA_GATE, SequenceGate)
 	;
 
-module.exports = DrumPart;
+module.exports = KeyboardPart;

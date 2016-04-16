@@ -2,8 +2,9 @@
 
 var Format = require('bin-format');
 var Enum = require('./enum');
+var Utils = require('./utils');
 
-var NoteNumber = Enum.uint8({
+var NoteNumberEnum = Enum.enumerate({
 	CN1: 0, // C -1
 	CSN1: 1, // C# -1
 	DN1: 2, // D -1
@@ -133,5 +134,17 @@ var NoteNumber = Enum.uint8({
 	FS9: 126, // F# 9
 	G9: 127, // G 9
 });
+
+class NoteNumber {
+	constructor(data) {
+		this.data = data;
+		this.note = new NoteNumberEnum(data & Utils.mask(0, 6));
+		this.off = (data & (1 << 7)) > 0;
+	}
+
+	serialize() {
+		return this.data;
+	}
+}
 
 module.exports = NoteNumber;
