@@ -154,6 +154,23 @@ class Tempo {
 	}
 }
 
+// TABLE22
+class MuteSoloParameters {
+	constructor(data) {
+		this.data = data;
+		this.mode = (data & (1 << 15)) == 0 ? 'mute' : 'solo';
+		this.flags = [];
+		for (var i = 14; i >= 0; i--) {
+			this.flags.push( data & (1 << i) ? 1 : 0 );
+		}
+	}
+
+	serialize() {
+		// TODO: pack
+		return data;
+	}
+}
+
 module.exports = {
 	EnabledFlag: EnabledFlag,
 	NoteNumber: NoteNumber,
@@ -173,4 +190,6 @@ module.exports = {
 	SliceNumber: SliceNumber,
 
 	Tempo: Tempo,
+
+	MuteSoloParameters: MuteSoloParameters,
 };

@@ -162,8 +162,8 @@ var Pattern = new Format()
 	.uint8('laststep') // 0-15
 	.uint8('arpflags', ArpFlags)
 	.uint8('arpcenternote', Common.NoteNumber)
-	.uint16LE('mutestatus', PartStatusParameters) // TODO: specific accessors
-	.uint16LE('swingstatus', PartStatusParameters)
+	.uint16LE('mutestatus', Common.MuteSoloParameters)
+	.uint16LE('swingstatus', PartStatusParameters)  // TODO: specific parameter classes
 	.uint16LE('outputbusstatus', PartStatusParameters)
 	.uint16LE('accentstatus', PartStatusParameters)
 	.nest('parts', PatternParts)
