@@ -130,6 +130,30 @@ class SliceNumber {
 	}
 }
 
+class Tempo {
+	constructor(value) {
+		this.value = value;
+		var tempoWhole = Utils.unpackInt(value, 9, 7);
+		var tempoDecimal = Utils.unpackInt(value, 4, 0);
+
+		// valid tempoDecimal values are between 0-9
+		if (tempoDecimal > 9 || tempoDecimal < 0)
+			tempoDecimal = 0;
+
+		// valid tempoWhole values are between 20-300
+		if (tempoWhole < 20)
+			tempoWhole = 20;
+		if (tempoWhole > 300)
+			tempoWhole = 300;
+
+		this.tempo = parseFloat('' + tempoWhole + '.' + tempoDecimal);
+	}
+
+	serialize() {
+		return this.value;
+	}
+}
+
 module.exports = {
 	EnabledFlag: EnabledFlag,
 	NoteNumber: NoteNumber,
@@ -147,4 +171,6 @@ module.exports = {
 	MSBOff16BE: MSBOff16BE,
 	SamplePointer: SamplePointer,
 	SliceNumber: SliceNumber,
+
+	Tempo: Tempo,
 };

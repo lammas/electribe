@@ -5,7 +5,7 @@ var Utils = require('./utils');
 var Const = require('./constants');
 var Enum = require('./enum');
 var ESXString = require('./string');
-var NoteNumber = require('./notenumber');
+var Common = require('./common');
 
 var DrumPart = require('./drumpart');
 var KeyboardPart = require('./keyboardpart');
@@ -91,30 +91,6 @@ class ArpFlags {
 	}
 }
 
-class Tempo {
-	constructor(value) {
-		this.value = value;
-		var tempoWhole = Utils.unpackInt(value, 9, 7);
-		var tempoDecimal = Utils.unpackInt(value, 4, 0);
-
-		// valid tempoDecimal values are between 0-9
-		if (tempoDecimal > 9 || tempoDecimal < 0)
-			tempoDecimal = 0;
-
-		// valid tempoWhole values are between 20-300
-		if (tempoWhole < 20)
-			tempoWhole = 20;
-		if (tempoWhole > 300)
-			tempoWhole = 300;
-
-		this.tempo = parseFloat('' + tempoWhole + '.' + tempoDecimal);
-	}
-
-	serialize() {
-		return this.value;
-	}
-}
-
 var Swing = Enum.uint8({
 	SWING_50: 0,
 	SWING_51: 1,
@@ -179,13 +155,13 @@ var PatternParts = new Format()
 
 var Pattern = new Format()
 	.buffer('name', 8, ESXString)
-	.uint16BE('tempo', Tempo)
+	.uint16BE('tempo', Common.Tempo)
 	.nest('swing', Swing)
 	.uint8('flags', PatternFlags)
 	.nest('fxchain', FXChain)
 	.uint8('laststep') // 0-15
 	.uint8('arpflags', ArpFlags)
-	.uint8('arpcenternote', NoteNumber)
+	.uint8('arpcenternote', Common.NoteNumber)
 	.uint16LE('mutestatus', PartStatusParameters) // TODO: specific accessors
 	.uint16LE('swingstatus', PartStatusParameters)
 	.uint16LE('outputbusstatus', PartStatusParameters)

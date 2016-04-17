@@ -1,0 +1,102 @@
+'use strict';
+
+var Format = require('bin-format');
+var ESXString = require('./string');
+var Common = require('./common');
+var Enum = require('./enum');
+var Const = require('./constants');
+
+class SongLength {
+	constructor(data) {
+		this.value = data + 1;
+	}
+
+	serialize() {
+		return this.value - 1;
+	}
+}
+
+var NextSongNumber = Enum.uint8({
+	NEXT_SONG_NUMBER_OFF:0,
+	NEXT_SONG_NUMBER_01: 1,
+	NEXT_SONG_NUMBER_02: 2,
+	NEXT_SONG_NUMBER_03: 3,
+	NEXT_SONG_NUMBER_04: 4,
+	NEXT_SONG_NUMBER_05: 5,
+	NEXT_SONG_NUMBER_06: 6,
+	NEXT_SONG_NUMBER_07: 7,
+	NEXT_SONG_NUMBER_08: 8,
+	NEXT_SONG_NUMBER_09: 9,
+	NEXT_SONG_NUMBER_10: 10,
+	NEXT_SONG_NUMBER_11: 11,
+	NEXT_SONG_NUMBER_12: 12,
+	NEXT_SONG_NUMBER_13: 13,
+	NEXT_SONG_NUMBER_14: 14,
+	NEXT_SONG_NUMBER_15: 15,
+	NEXT_SONG_NUMBER_16: 16,
+	NEXT_SONG_NUMBER_17: 17,
+	NEXT_SONG_NUMBER_18: 18,
+	NEXT_SONG_NUMBER_19: 19,
+	NEXT_SONG_NUMBER_20: 20,
+	NEXT_SONG_NUMBER_21: 21,
+	NEXT_SONG_NUMBER_22: 22,
+	NEXT_SONG_NUMBER_23: 23,
+	NEXT_SONG_NUMBER_24: 24,
+	NEXT_SONG_NUMBER_25: 25,
+	NEXT_SONG_NUMBER_26: 26,
+	NEXT_SONG_NUMBER_27: 27,
+	NEXT_SONG_NUMBER_28: 28,
+	NEXT_SONG_NUMBER_29: 29,
+	NEXT_SONG_NUMBER_30: 30,
+	NEXT_SONG_NUMBER_31: 31,
+	NEXT_SONG_NUMBER_32: 32,
+	NEXT_SONG_NUMBER_33: 33,
+	NEXT_SONG_NUMBER_34: 34,
+	NEXT_SONG_NUMBER_35: 35,
+	NEXT_SONG_NUMBER_36: 36,
+	NEXT_SONG_NUMBER_37: 37,
+	NEXT_SONG_NUMBER_38: 38,
+	NEXT_SONG_NUMBER_39: 39,
+	NEXT_SONG_NUMBER_40: 40,
+	NEXT_SONG_NUMBER_41: 41,
+	NEXT_SONG_NUMBER_42: 42,
+	NEXT_SONG_NUMBER_43: 43,
+	NEXT_SONG_NUMBER_44: 44,
+	NEXT_SONG_NUMBER_45: 45,
+	NEXT_SONG_NUMBER_46: 46,
+	NEXT_SONG_NUMBER_47: 47,
+	NEXT_SONG_NUMBER_48: 48,
+	NEXT_SONG_NUMBER_49: 49,
+	NEXT_SONG_NUMBER_50: 50,
+	NEXT_SONG_NUMBER_51: 51,
+	NEXT_SONG_NUMBER_52: 52,
+	NEXT_SONG_NUMBER_53: 53,
+	NEXT_SONG_NUMBER_54: 54,
+	NEXT_SONG_NUMBER_55: 55,
+	NEXT_SONG_NUMBER_56: 56,
+	NEXT_SONG_NUMBER_57: 57,
+	NEXT_SONG_NUMBER_58: 58,
+	NEXT_SONG_NUMBER_59: 59,
+	NEXT_SONG_NUMBER_60: 60,
+	NEXT_SONG_NUMBER_61: 61,
+	NEXT_SONG_NUMBER_62: 62,
+	NEXT_SONG_NUMBER_63: 63,
+	NEXT_SONG_NUMBER_64: 64,
+});
+
+var ByteValue = new Format()
+	.uint8('value');
+
+var Song = new Format()
+	.buffer('name', 8, ESXString)
+	.uint16BE('tempo', Common.Tempo)
+	.nest('tempolock', Common.EnabledFlag)
+	.uint8('length', SongLength)
+	.nest('mutehold', Common.EnabledFlag)
+	.nest('nextsongnumber', NextSongNumber)
+	.uint16BE('numsongevents')
+	.list('patterns', Const.NUM_SONG_PATTERNS, ByteValue)
+	.list('noteoffsets', Const.NUM_SONG_PATTERNS, ByteValue)
+	;
+
+module.exports = Song;

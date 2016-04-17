@@ -7,6 +7,7 @@ var Format = require('bin-format');
 
 var GlobalParameters = require('./src/global');
 var Pattern = require('./src/pattern');
+var Song = require('./src/song');
 
 // TODO: make tests
 console.log('GlobalParameters length: ', GlobalParameters.length(), 192);
@@ -16,12 +17,11 @@ var ESXFile = new Format()
 	.buffer('header', 32)
 	.nest('global', GlobalParameters)
 	.buffer('_unknown0', 288) // unknown, all 0x00
-	// .list('patterns', 1, Pattern)
 	.list('patterns', 256, Pattern)
-/*
 	.buffer('_unknown1', 148992)
-	.buffer('songs', 64 * 528)
+	.list('songs', 64, Song)
 	.buffer('songevents', 20000 * 8)
+/*
 	.buffer('_unknown2', 330496)
 	.buffer('bpsheader', 32)
 	.uint32BE('numMonoSamples')
@@ -46,6 +46,8 @@ fs.readFile(TESTFILE, function(err, buffer) {
 	console.timeEnd('parse');
 	console.log('Parsing complete:');
 	console.time('inspect');
-	console.log(require('util').inspect(result, { depth: null }));
+	// console.log(result);
+	// console.log(require('util').inspect(result, { depth: null }));
+	console.log(require('util').inspect(result.songs, { depth: null }));
 	console.timeEnd('inspect');
 });
