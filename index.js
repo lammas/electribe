@@ -1,6 +1,8 @@
-'use strict';
+// References:
+//    [1] http://skratchdot.com/projects/open-electribe-editor/
+//    [2] ESX1midiimp.txt from korg.de
 
-// based on http://skratchdot.com/projects/open-electribe-editor/javadocs/index.html?com/skratchdot/electribe/model/esx/EsxFile.html
+'use strict';
 
 var fs = require('fs');
 var Format = require('bin-format');
@@ -48,8 +50,17 @@ fs.readFile(TESTFILE, function(err, buffer) {
 	result.songevents.parse(result.songs);
 	result.sampledata.parse(result);
 	console.timeEnd('parse');
+	console.log('Parsing complete');
 
-	console.log('Parsing complete:');
+
+	function findSampleByName(name, samples) {
+		for (var i=0; i<samples.length; i++) {
+			if (samples[i].sample.name.value == name)
+				return samples[i];
+		}
+		return null;
+	}
+
 	console.time('inspect');
 	// console.log(result);
 	// console.log(require('util').inspect(result, { depth: null }));
@@ -58,6 +69,19 @@ fs.readFile(TESTFILE, function(err, buffer) {
 	// console.log(require('util').inspect(result.monoSampleHeaders, { depth: null }));
 	// console.log(require('util').inspect(result.stereoSampleHeaders, { depth: null }));
 	// console.log(require('util').inspect(result.slices, { depth: null }));
+	// // var sample = result.sampledata.samples[3];
+	// var sample = findSampleByName('SlapBass', result.sampledata.samples);
+	// if (sample) {
+	// 	console.log('Investigating sample: ', sample);
+	// 	console.log(sample.header.toString());
+	//
+	// 	var fd = fs.openSync('./out.wav', 'w');
+	// 	fs.writeSync(fd, sample.header, 0, sample.header.length);
+	// 	fs.writeSync(fd, sample.data, 0, sample.data.length);
+	// 	fs.closeSync(fd);
+	// }
+	// console.log('=======================================');
+
 	console.log(require('util').inspect(result.sampledata, { depth: null }));
 	console.timeEnd('inspect');
 });
