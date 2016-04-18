@@ -3,17 +3,19 @@
 var Format = require('bin-format');
 var Const = require('./constants');
 
-class WaveDataMono {
-	constructor(data) {
-		this.data = data;
-		this.datalengthwtf = data.length;
+class WaveData {
+	constructor(data, sampleHeader) {
+		this.sample = sampleHeader;
+		this.header = data.slice(0, 16);
+		this.data = data.slice(16);
+		this.numframes = this.data.length / 2;
 	}
 }
 
 class WaveDataStereo {
-	constructor(left, right) {
-		this.left = left;
-		this.right = right;
+	constructor(left, right, sampleHeader) {
+		this.left = new WaveData(left, sampleHeader);
+		this.right = new WaveData(right, sampleHeader);
 	}
 }
 
@@ -28,11 +30,10 @@ class SampleData {
 			if (i < Const.NUM_SAMPLES_MONO) {
 				var sampleHeader = esx.monoSampleHeaders[i];
 				var size = sampleHeader.offsetchannel1end - sampleHeader.offsetchannel1start;
-				console.log('Mono: "%s"', sampleHeader.name.value, size);
 				if (size > 0 && sampleHeader.offsetchannel1start != 0xFFFFFFFF &&
 					sampleHeader.offsetchannel1end != 0xFFFFFFFF) {
 					var sampleData = this.data.slice(sampleHeader.offsetchannel1start, sampleHeader.offsetchannel1end);
-					this.samples.push(new WaveDataMono(sampleData));
+					this.samples.push(new WaveData(sampleData, sampleHeader));
 				}
 				else {
 					this.samples.push(null);
@@ -50,12 +51,11 @@ class SampleData {
 				) {
 					var dataLeft = this.data.slice(sampleHeader.offsetchannel1start, sampleHeader.offsetchannel1end);
 					var dataRight = this.data.slice(sampleHeader.offsetchannel2start, sampleHeader.offsetchannel2end);
-					this.samples.push(new WaveDataStereo(dataLeft, dataRight));
+					this.samples.push(new WaveDataStereo(dataLeft, dataRight, sampleHeader));
 				}
 				else {
 					this.samples.push(null);
 				}
-				console.log('Stereo: "%s"', sampleHeader.name.value, size);
 			}
 		}
 	}

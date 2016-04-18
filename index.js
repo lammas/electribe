@@ -51,13 +51,13 @@ fs.readFile(TESTFILE, function(err, buffer) {
 
 	console.log('Parsing complete:');
 	console.time('inspect');
-	console.log(result);
+	// console.log(result);
 	// console.log(require('util').inspect(result, { depth: null }));
 	// console.log(require('util').inspect(result.songs, { depth: null }));
 	// console.log(require('util').inspect(result.songevents, { depth: null }));
 	// console.log(require('util').inspect(result.monoSampleHeaders, { depth: null }));
 	// console.log(require('util').inspect(result.stereoSampleHeaders, { depth: null }));
 	// console.log(require('util').inspect(result.slices, { depth: null }));
-	// console.log(require('util').inspect(result.sampledata, { depth: null }));
+	console.log(require('util').inspect(result.sampledata, { depth: null }));
 	console.timeEnd('inspect');
 });
