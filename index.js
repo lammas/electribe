@@ -56,6 +56,8 @@ fs.readFile(TESTFILE, function(err, buffer) {
 
 	function findSampleByName(name, samples) {
 		for (var i=0; i<samples.length; i++) {
+			if (!samples[i])
+				continue;
 			if (samples[i].sample.name.value == name)
 				return samples[i];
 		}
@@ -68,7 +70,7 @@ fs.readFile(TESTFILE, function(err, buffer) {
 		fs.closeSync(fd);
 	}
 
-	// console.time('inspect');
+	console.time('inspect');
 	// console.log(result);
 	// console.log(require('util').inspect(result, { depth: null }));
 	// console.log(require('util').inspect(result.songs, { depth: null }));
@@ -77,13 +79,14 @@ fs.readFile(TESTFILE, function(err, buffer) {
 	// console.log(require('util').inspect(result.stereoSampleHeaders, { depth: null }));
 	// console.log(require('util').inspect(result.slices, { depth: null }));
 	// console.log(require('util').inspect(result.sampledata, { depth: null }));
-	// console.timeEnd('inspect');
+	console.timeEnd('inspect');
 
-	// var sample = result.sampledata.samples[3];
 	var sample = findSampleByName('PercLP-1', result.sampledata.samples);
 	if (sample) {
 		console.log('Investigating sample: ', sample);
-		console.log(sample.header.toString());
 		// saveBuffer('./perclp1.wav', sample.data);
 	}
+
+	// var verify = ESXFile.write(result, { blocksize: 1024 * 1024 * 2 });
+	// saveBuffer('data/out2.esx', verify);
 });

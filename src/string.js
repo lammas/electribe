@@ -1,12 +1,13 @@
 'use strict';
 
 class ESXString {
-	constructor(value) {
-		this.value = value.toString();
+	constructor(data) {
+		this.data = data;
+		this.value = data.toString();
 	}
 
 	serialize() {
-		return new Buffer(this.value, 'binary');
+		return this.data;
 	}
 }
 
