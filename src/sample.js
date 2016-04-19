@@ -35,7 +35,8 @@ class SampleTune {
 
 var PlayLevel = Enum.enumerate({
 	DB_0: 0,
-	DB_PLUS12: 1
+	DB_PLUS12: 1,
+	DB_UNINITIALIZED: 0xFF
 });
 
 class StretchStep {

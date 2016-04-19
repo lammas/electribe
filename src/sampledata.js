@@ -3,10 +3,30 @@
 var Format = require('bin-format');
 var Const = require('./constants');
 
+// PCM data header
+// 80 00 7f ff 00 00 42 64 00 01 9a 8a 01 00 ff ff
+// [signature]  |  |  |  |  |  |  |  |  |  |  |  |
+//              |  |  |  |  |  |  |  |  +- uint8 (sequential ID)
+//              |  |  |  |  |  |  |  |     |  |  |
+//              |  |  |  |  +- uint32BE (end) |  |
+//              +- uint32BE (start)        |  |  |
+//                                         +- always static
+//
+// 'start' and 'end' are the same as offsetchannelXstart and offsetchannelXend
+
+var WaveDataHeader = new Format()
+	.buffer('signature', 4)
+	.uint32BE('start')
+	.uint32BE('end')
+	.uint8('index')
+	.uint8('zero')
+	.uint16BE('ffff')
+	;
+
 class WaveData {
 	constructor(data, sampleHeader) {
 		this.sample = sampleHeader;
-		this.header = data.slice(0, 16);
+		this.header = WaveDataHeader.parse(data.slice(0, 16));
 		this.data = data.slice(16);
 		this.numframes = this.data.length / 2;
 	}
