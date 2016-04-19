@@ -18,7 +18,7 @@ class DrumSequenceSteps {
 	}
 
 	serialize() {
-		return data;
+		return this.data;
 	}
 }
 

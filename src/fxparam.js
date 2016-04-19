@@ -26,7 +26,7 @@ var FXType = Enum.enumerate({
 });
 
 // Reference: TABLE23
-class SequenceSteps {
+class FXSequenceSteps {
 	constructor(data) {
 		this.data = data;
 		this.steps = [];
@@ -36,12 +36,12 @@ class SequenceSteps {
 	}
 
 	serialize() {
-		return data;
+		return this.data;
 	}
 }
 
 var Bar = new Format()
-	.uint8('steps', SequenceSteps);
+	.uint8('steps', FXSequenceSteps);
 
 var FXParam = new Format()
 	.uint8('fxtype', FXType)

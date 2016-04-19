@@ -7,7 +7,7 @@ var Enum = require('./enum');
 var Common = require('./common');
 
 // Reference: TABLE23
-class SequenceSteps {
+class AccentSequenceSteps {
 	constructor(data) {
 		this.data = data;
 		this.steps = [];
@@ -17,12 +17,12 @@ class SequenceSteps {
 	}
 
 	serialize() {
-		return data;
+		return this.data;
 	}
 }
 
 var Bar = new Format()
-	.uint8('steps', SequenceSteps);
+	.uint8('steps', AccentSequenceSteps);
 
 var AccentPart = new Format()
 	.uint8('level') // 0-127

@@ -139,7 +139,7 @@ class PartStatusParameters {
 
 	serialize() {
 		// TODO: pack
-		return data;
+		return this.data;
 	}
 }
 

@@ -7,7 +7,7 @@ var Enum = require('./enum');
 var Common = require('./common');
 
 // Reference: TABLE23
-class SequenceSteps {
+class AudioInSequenceSteps {
 	constructor(data) {
 		this.data = data;
 		this.steps = [];
@@ -17,7 +17,7 @@ class SequenceSteps {
 	}
 
 	serialize() {
-		return data;
+		return this.data;
 	}
 }
 
@@ -25,7 +25,7 @@ var SequenceGate = new Format()
 	.uint8('gate');
 
 var Bar = new Format()
-	.uint8('steps', SequenceSteps);
+	.uint8('steps', AudioInSequenceSteps);
 
 var AudioInPart = new Format()
 	.nest('filtertype', Common.FilterType)

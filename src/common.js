@@ -167,7 +167,7 @@ class MuteSoloParameters {
 
 	serialize() {
 		// TODO: pack
-		return data;
+		return this.data;
 	}
 }
 
