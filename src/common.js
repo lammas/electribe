@@ -157,7 +157,6 @@ class Tempo {
 // TABLE22
 class MuteSoloParameters {
 	constructor(data) {
-		this.data = data;
 		this.mode = (data & (1 << 15)) == 0 ? 'mute' : 'solo';
 		this.flags = [];
 		for (var i = 14; i >= 0; i--) {
@@ -166,8 +165,15 @@ class MuteSoloParameters {
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.data;
+		var data = 0;
+		if (this.mode == 'solo')
+			data |= (1 << 15)
+		for (var i = 0; i < 15; i++) {
+			if (this.flags[i] == 0)
+				continue;
+			data |= (1 << (14 - i));
+		}
+		return data;
 	}
 }
 

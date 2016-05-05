@@ -1,13 +1,10 @@
 var test = require('tape');
 var path = require('path');
 var fs   = require('fs');
-var util = require('util');
+
+var utils = require('./test_utils');
 
 var electribe = require('../index');
-
-function inspect(o) {
-	console.log(util.inspect(o, { depth: null }));
-}
 
 // function findSampleByName(name, samples) {
 // 	for (var i=0; i<samples.length; i++) {
@@ -24,6 +21,16 @@ function inspect(o) {
 // 	fs.writeSync(fd, buffer, 0, buffer.length);
 // 	fs.closeSync(fd);
 // }
+
+test('ESX1: Common', function(t) {
+	var MuteSoloParameters = require('../src/common').MuteSoloParameters;
+	var input = utils.uintFromBits(utils.uint16TestPattern);
+	var params = new MuteSoloParameters(input);
+	var output = params.serialize();
+	t.equals(input, output, 'MuteSoloParameters OK');
+
+	t.end();
+});
 
 
 var TESTFILE = 'data/ESX-Factory-Data.esx';
