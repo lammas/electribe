@@ -23,11 +23,22 @@ var electribe = require('../index');
 // }
 
 test('ESX1: Common', function(t) {
-	var MuteSoloParameters = require('../src/common').MuteSoloParameters;
+	var Common = require('../src/common');
+
 	var input = utils.uintFromBits(utils.uint16TestPattern);
-	var params = new MuteSoloParameters(input);
+	var params = new Common.MuteSoloParameters(input);
 	var output = params.serialize();
 	t.equals(input, output, 'MuteSoloParameters OK');
+
+	var input = utils.uintFromBits(utils.uint16TestPattern);
+	var sliceNumber = new Common.SliceNumber(input);
+	var output = sliceNumber.serialize();
+	t.equals(input, output, 'SliceNumber OK');
+
+	var input = utils.uintFromBits(utils.uint16TestPattern);
+	var samplePointer = new Common.SamplePointer(input);
+	var output = samplePointer.serialize();
+	t.equals(input, output, 'SamplePointer OK');
 
 	t.end();
 });

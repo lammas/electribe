@@ -108,25 +108,29 @@ class ModFlags {
 
 class SamplePointer {
 	constructor(data) {
-		this.data = data;
 		this.sample = Utils.mask(0, 14) & data;
 		this.off = ((1 << 15) & data) > 0;
 	}
 
 	serialize() {
-		return this.data;
+		var data = this.sample;
+		if (this.off)
+			data |= (1 << 15);
+		return data;
 	}
 }
 
 class SliceNumber {
 	constructor(data) {
-		this.data = data;
 		this.slice = Utils.mask(0, 14) & data;
 		this.all = ((1 << 15) & data) > 0;
 	}
 
 	serialize() {
-		return this.data;
+		var data = this.slice;
+		if (this.all)
+			data |= (1 << 15);
+		return data;
 	}
 }
 
