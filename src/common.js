@@ -11,27 +11,29 @@ var EnabledFlag = Enum.uint8({
 
 class MSBOff8 {
 	constructor(data) {
-		this.data = data;
 		this.value = data & Utils.mask(0, 6);
 		this.off = (data & (1 << 7)) > 0;
 	}
 
 	serialize() {
-		// TODO: pack values
-		return this.data;
+		var data = this.value;
+		if (this.off)
+			data |= (1 << 7);
+		return data;
 	}
 }
 
 class MSBOff16BE {
 	constructor(data) {
-		this.data = data;
-		this.value = data & Utils.mask(0, 14);
+		this.value = Utils.mask(0, 14) & data;
 		this.off = (data & (1 << 15)) > 0;
 	}
 
 	serialize() {
-		// TODO: pack values
-		return this.data;
+		var data = this.value;
+		if (this.off)
+			data |= (1 << 15);
+		return data;
 	}
 }
 

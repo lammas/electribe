@@ -40,6 +40,16 @@ test('ESX1: Common', function(t) {
 	var output = samplePointer.serialize();
 	t.equals(input, output, 'SamplePointer OK');
 
+	var input = utils.uintFromBits(utils.uint8TestPattern);
+	var msboff8 = new Common.MSBOff8(input);
+	var output = msboff8.serialize();
+	t.equals(input, output, 'MSBOff8 OK');
+
+	var input = utils.uintFromBits(utils.uint16TestPattern);
+	var msboff16 = new Common.MSBOff16BE(input);
+	var output = msboff16.serialize();
+	t.equals(input, output, 'MSBOff16BE OK');
+
 	t.end();
 });
 
