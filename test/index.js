@@ -74,6 +74,21 @@ test('ESX1: Common', function(t) {
 	t.end();
 });
 
+test('ESX1: ESXString', function(t) {
+	var ESXString = require('../src/string');
+
+	const buffer = Buffer.from('68656c206c6f0000', 'hex');
+
+	var str = new ESXString(buffer);
+	var output = str.serialize();
+	t.deepEquals(buffer, output, 'ESXString OK');
+
+	str.value = '11112222baz';
+	var output = str.serialize();
+	t.equals('11112222', output.toString(), 'ESXString excess modification OK');
+
+	t.end();
+});
 
 var TESTFILE = 'data/ESX-Factory-Data.esx';
 
