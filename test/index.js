@@ -50,6 +50,17 @@ test('ESX1: Common', function(t) {
 	var output = msboff16.serialize();
 	t.equals(input, output, 'MSBOff16BE OK');
 
+
+	var input = utils.uintFromBits(utils.uint8TestPattern);
+	var fxflags = new Common.FXFlags(input);
+	var output = fxflags.serialize();
+	t.equals(input, output, 'FXFlags OK');
+
+	var input = utils.uintFromBits(utils.uint8TestPattern);
+	var modflags = new Common.ModFlags(input);
+	var output = modflags.serialize();
+	t.equals(input, output, 'ModFlags OK');
+
 	t.end();
 });
 

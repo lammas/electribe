@@ -73,8 +73,14 @@ class FXFlags {
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.value;
+		var value = 0;
+		value = Utils.packInt(value, this.FxSelect.serialize(), 2, 0);
+		value = Utils.packInt(value, this.FxSend, 1, 2);
+		value = Utils.packInt(value, this.Roll, 1, 3);
+		value = Utils.packInt(value, this.AmpEg.serialize(), 1, 4);
+		value = Utils.packInt(value, this.Reverse, 1, 5);
+		value = Utils.packInt(value, this.ReservedBitsAfterReverse, 2, 6);
+		return value;
 	}
 }
 
@@ -103,8 +109,12 @@ class ModFlags {
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.value;
+		var value = 0;
+		value = Utils.packInt(value, this.ModDest.serialize(), 3, 0);
+		value = Utils.packInt(value, this.ReservedBitAfterModDepth, 1, 3);
+		value = Utils.packInt(value, this.ModType.serialize(), 3, 4);
+		value = Utils.packInt(value, this.BpmSync, 1, 7);
+		return value;
 	}
 }
 
@@ -156,6 +166,7 @@ class Tempo {
 	}
 
 	serialize() {
+		// TODO: pack
 		return this.value;
 	}
 }
