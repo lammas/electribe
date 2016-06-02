@@ -61,6 +61,16 @@ test('ESX1: Common', function(t) {
 	var output = modflags.serialize();
 	t.equals(input, output, 'ModFlags OK');
 
+	var input = utils.uintFromBits([
+		0, 1, 0, 0, 0, 0, 0, 1, 0, // 130 bpm
+		1, 0, 1,   // reserved
+		0, 1, 0, 0 // .40 bpm
+	]);
+	var tempo = new Common.Tempo(input);
+	t.equals(tempo.tempo, 130.4, 'Tempo value OK');
+	var output = tempo.serialize();
+	t.equals(input, output, 'Tempo OK');
+
 	t.end();
 });
 

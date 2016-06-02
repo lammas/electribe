@@ -63,7 +63,6 @@ var AmpEg = Enum.enumerate({
 
 class FXFlags {
 	constructor(value) {
-		this.value = value;
 		this.FxSelect = new FXSelect(Utils.unpackInt(value, 2, 0));
 		this.FxSend = Utils.unpackInt(value, 1, 2);
 		this.Roll = Utils.unpackInt(value, 1, 3);
@@ -101,7 +100,6 @@ var ModType = Enum.enumerate({
 
 class ModFlags {
 	constructor(value) {
-		this.value = value;
 		this.ModDest = new ModDest(Utils.unpackInt(value, 3, 0));
 		this.ReservedBitAfterModDepth = Utils.unpackInt(value, 1, 3);
 		this.ModType = new ModType(Utils.unpackInt(value, 3, 4));
@@ -148,9 +146,9 @@ class SliceNumber {
 
 class Tempo {
 	constructor(value) {
-		this.value = value;
-		var tempoWhole = Utils.unpackInt(value, 9, 7);
+		this.ReservedBits = Utils.unpackInt(value, 3, 4);
 		var tempoDecimal = Utils.unpackInt(value, 4, 0);
+		var tempoWhole = Utils.unpackInt(value, 9, 7);
 
 		// valid tempoDecimal values are between 0-9
 		if (tempoDecimal > 9 || tempoDecimal < 0)
@@ -166,8 +164,23 @@ class Tempo {
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.value;
+		var tempoWhole = Math.floor(this.tempo);
+		var tempoDecimal = Math.floor( (this.tempo % 1) * 10 );
+
+		if (tempoWhole < 20) {
+			tempoWhole = 20;
+			tempoDecimal = 0;
+		}
+		if (tempoWhole > 300) {
+			tempoWhole = 300;
+			tempoDecimal = 0;
+		}
+
+		var value = 0;
+		value = Utils.packInt(value, this.ReservedBits, 3, 4);
+		value = Utils.packInt(value, tempoWhole, 9, 7);
+		value = Utils.packInt(value, tempoDecimal, 4, 0);
+		return value;
 	}
 }
 
