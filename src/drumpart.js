@@ -10,7 +10,6 @@ var Common = require('./common');
 // Reference: TABLE23
 class DrumSequenceSteps {
 	constructor(data) {
-		this.data = data;
 		this.steps = [];
 		for (var i = 7; i >= 0; i--) {
 			this.steps.push( data & (1 << i) ? 1 : 0 );
@@ -18,7 +17,7 @@ class DrumSequenceSteps {
 	}
 
 	serialize() {
-		return this.data;
+		return Utils.uintFromBits(this.steps);
 	}
 }
 

@@ -90,6 +90,20 @@ test('ESX1: ESXString', function(t) {
 	t.end();
 });
 
+test('ESX1: Utils.uintFromBits', function(t) {
+	var Utils = require('../src/utils');
+
+	var value = Utils.uintFromBits(utils.uint8TestPattern);
+	var bits = Utils.uintToBits(value, 8);
+	t.deepEquals(bits, utils.uint8TestPattern, 'uint8 bit array conversion OK');
+
+	var value = Utils.uintFromBits(utils.uint16TestPattern);
+	var bits = Utils.uintToBits(value, 16);
+	t.deepEquals(bits, utils.uint16TestPattern, 'uint16 bit array conversion OK');
+
+	t.end();
+});
+
 var TESTFILE = 'data/ESX-Factory-Data.esx';
 
 test('ESX1: Basic read-write', function(t) {
