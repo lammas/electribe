@@ -7,14 +7,15 @@ var Common = require('./common');
 
 class SongEventFlags {
 	constructor(data) {
-		this.data = data;
 		this.measure = Utils.unpackInt(data, 4, 4);
 		this.step = Utils.unpackInt(data, 4, 0);
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.data;
+		var value = 0;
+		value = Utils.packInt(value, this.measure, 4, 4);
+		value = Utils.packInt(value, this.step, 4, 0);
+		return value;
 	}
 }
 
@@ -69,24 +70,34 @@ class SongEvents {
 	parse(songs) {
 		var position = 0;
 		for (var i=0; i<songs.length; i++) {
+			if (songs[i].numsongevents == 0)
+				continue;
+
 			var fmt = new Format();
-			if (songs[i].numsongevents > 0) {
-				fmt.list('events', songs[i].numsongevents, SongEvent);
-				var length = songs[i].numsongevents * Const.CHUNKSIZE_SONG_EVENT;
-				var eventData = this.data.slice(position, position + length);
-				position += length;
-				this.songs.push(fmt.parse(eventData));
-			}
-			else {
-				this.songs.push({});
-			}
+			fmt.list('events', songs[i].numsongevents, SongEvent);
 			this.formats.push(fmt);
+
+			var length = songs[i].numsongevents * Const.CHUNKSIZE_SONG_EVENT;
+			var eventData = this.data.slice(position, position + length);
+			position += length;
+			this.songs.push(fmt.parse(eventData));
 		}
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.data;
+		if (this.formats.length != this.songs.length)
+			throw Error('Song count does not match event list formats count');
+
+		var data = Buffer.alloc(this.data.length, 0);
+		var position = 0;
+		for (var i = 0; i < this.formats.length; ++i) {
+			var fmt = this.formats[i];
+			var song = this.songs[i];
+			var eventData = fmt.write(song);
+			eventData.copy(data, position);
+			position += eventData.length;
+		}
+		return data;
 	}
 }
 
