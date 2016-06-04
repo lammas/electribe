@@ -65,7 +65,6 @@ var ArpScale = Enum.enumerate({
 
 class PatternFlags {
 	constructor(value) {
-		this._value = value;
 		this.patternLength = Utils.unpackInt(value, 3, 0); // 0-7 -> 1-8
 		this._reserved = Utils.unpackInt(value, 1, 3);
 		this.beat = new Beat(Utils.unpackInt(value, 2, 4));
@@ -73,21 +72,26 @@ class PatternFlags {
 	}
 
 	serialize() {
-		// TODO: pack value
-		return this._value;
+		var value = 0;
+		value = Utils.packInt(value, this.patternLength, 3, 0);
+		value = Utils.packInt(value, this._reserved, 1, 3);
+		value = Utils.packInt(value, this.beat.serialize(), 2, 4);
+		value = Utils.packInt(value, this.rollType.serialize(), 2, 6);
+		return value;
 	}
 }
 
 class ArpFlags {
 	constructor(value) {
-		this._value = value;
 		this.arpScale = new ArpScale(Utils.unpackInt(value, 5, 0));
 		this._reserved = Utils.unpackInt(value, 3, 5);
 	}
 
 	serialize() {
-		// TODO: pack value
-		return this._value;
+		var value = 0;
+		value = Utils.packInt(value, this.arpScale.serialize(), 5, 0);
+		value = Utils.packInt(value, this._reserved, 3, 5);
+		return value;
 	}
 }
 
@@ -130,7 +134,6 @@ var FXChain = Enum.uint8({
 // TABLE22
 class PartStatusParameters {
 	constructor(data) {
-		this.data = data;
 		this.flags = [];
 		for (var i = 15; i >= 0; i--) {
 			this.flags.push( data & (1 << i) ? 1 : 0 );
@@ -138,8 +141,7 @@ class PartStatusParameters {
 	}
 
 	serialize() {
-		// TODO: pack
-		return this.data;
+		return Utils.uintFromBits(this.flags);
 	}
 }
 

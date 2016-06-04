@@ -137,13 +137,15 @@ var NoteNumberEnum = Enum.enumerate({
 
 class NoteNumber {
 	constructor(data) {
-		this.data = data;
 		this.note = new NoteNumberEnum(data & Utils.mask(0, 6));
 		this.off = (data & (1 << 7)) > 0;
 	}
 
 	serialize() {
-		return this.data;
+		var data = this.note.serialize();
+		if (this.off)
+			data |= (1 << 7);
+		return data;
 	}
 }
 
