@@ -34,5 +34,5 @@ var esxData = ESX.write(parsedObject, { blocksize: 1024 * 1024 * 2 });
 
 ## Credits
 
-* Insight into the data layout was mostly gained from @skratchdot's open-electribe-editor
+* Insight into the data layout was mostly gained from ([open-electribe-editor](https://github.com/skratchdot/open-electribe-editor/)) by @skratchdot
 * The rest was reverse engineered from ESX1midiimp.txt document from korg.de
