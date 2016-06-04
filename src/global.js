@@ -54,7 +54,6 @@ var PitchBendRange = Enum.uint8({
 
 class GlobalParametersFlags {
 	constructor(data) {
-		this._value = data;
 		this.noteMessageEnabled = Utils.unpackInt(data, 1, 0);
 		this.systemExEnabled = Utils.unpackInt(data, 1, 1);
 		this.controlChangeEnabled = Utils.unpackInt(data, 1, 2);
@@ -63,8 +62,13 @@ class GlobalParametersFlags {
 	}
 
 	serialize() {
-		// TODO: pack values
-		return this._value;
+		var value = 0;
+		value = Utils.packInt(value, this.noteMessageEnabled, 1, 0);
+		value = Utils.packInt(value, this.systemExEnabled, 1, 1);
+		value = Utils.packInt(value, this.controlChangeEnabled, 1, 2);
+		value = Utils.packInt(value, this.programChangeEnabled, 1, 3);
+		value = Utils.packInt(value, this._reserved, 4, 4);
+		return value;
 	}
 }
 
