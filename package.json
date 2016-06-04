@@ -1,6 +1,6 @@
 {
   "name": "electribe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Electribe ESX file format toolkit for Node.js",
   "repository": {
     "type": "git",
