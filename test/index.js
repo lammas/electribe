@@ -1,3 +1,5 @@
+'use strict';
+
 var test = require('tape');
 var path = require('path');
 var fs   = require('fs');
@@ -112,7 +114,7 @@ test('ESX1: Basic read-write', function(t) {
 
 	fs.readFile(TESTFILE, function(err, buffer) {
 		if (err) {
-			t.ok(false, 'Could not read test data: ' + TESTFILE);
+			t.skip('No ESX test data found: ' + TESTFILE);
 			t.end();
 			return;
 		}
