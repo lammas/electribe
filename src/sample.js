@@ -9,27 +9,44 @@ var Utils = require('./utils');
 
 class SampleTune {
 	constructor(data) {
-		this.data = data;
 		this.sampleTuneNegative = Utils.unpackInt(data, 1, 15);
 		this.sampleTuneWhole = Utils.unpackInt(data, 7, 8);
 		this.sampleTuneDecimal = Utils.unpackInt(data, 8, 0);
+	}
 
+	get value() {
 		// valid sampleTuneDecimal values are between 0-99
 		if (this.sampleTuneDecimal > 99 || this.sampleTuneDecimal < 0) {
 			this.sampleTuneDecimal = 0;
 		}
 
-		// Now construct the float value as a string
+		// Construct the float value as a string
 		var s = "";
 		if (this.sampleTuneNegative == 1 && this.sampleTuneWhole > 0) {
 			s = "-";
 		}
 		s += this.sampleTuneWhole + "." + ("00" + this.sampleTuneDecimal).slice(-2);
-		this.value = parseFloat(s)
+		return parseFloat(s);
+	}
+
+	set value(tune) {
+		this.sampleTuneNegative = tune < 0 ? 1 : 0;
+		tune = Math.abs(tune);
+
+		this.sampleTuneWhole = Math.floor(tune);
+		this.sampleTuneDecimal = Math.floor( (tune % 1) * 100 );
+
+		if (this.sampleTuneDecimal > 99 || this.sampleTuneDecimal < 0) {
+			this.sampleTuneDecimal = 0;
+		}
 	}
 
 	serialize() {
-		return this.data;
+		var value = 0;
+		value = Utils.packInt(value, this.sampleTuneNegative, 1, 15);
+		value = Utils.packInt(value, this.sampleTuneWhole, 7, 8);
+		value = Utils.packInt(value, this.sampleTuneDecimal, 8, 0);
+		return value;
 	}
 }
 
@@ -41,12 +58,15 @@ var PlayLevel = Enum.enumerate({
 
 class StretchStep {
 	constructor(data) {
-		this.data = data;
-		this.off = data < 0 ? true : false;
+		this.value = Utils.unpackInt(data, 7, 0);
+		this.off = Utils.unpackInt(data, 1, 7) == 1;
 	}
 
 	serialize() {
-		return this.data;
+		var value = Utils.packInt(0, this.value, 7, 0);
+		if (this.off)
+			value |= (1 << 7);
+		return value;
 	}
 }
 
@@ -61,7 +81,7 @@ var SampleMono = new Format()
 	.uint16BE('sampletune', SampleTune)
 	.uint8('playlevel', PlayLevel)
 	.uint8('_unknown0')
-	.int8('stretchstep', StretchStep)
+	.uint8('stretchstep', StretchStep)
 	.uint8('_unknown1')
 	.uint8('_unknown2')
 	.uint8('_unknown3')
@@ -79,13 +99,14 @@ var SampleStereo = new Format()
 	.uint16BE('sampletune', SampleTune)
 	.uint8('playlevel', PlayLevel)
 	.uint8('_unknown0')
-	.int8('stretchstep', StretchStep)
+	.uint8('stretchstep', StretchStep)
 	.uint8('_unknown1')
 	.uint8('_unknown2')
 	.uint8('_unknown3')
 	;
 
 module.exports = {
+	SampleTune: SampleTune,
 	Mono: SampleMono,
 	Stereo: SampleStereo
 };
