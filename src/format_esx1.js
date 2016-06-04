@@ -40,9 +40,8 @@ function parse(buffer) {
 	return result;
 }
 
-function write(object, options) {
-	var buffer = ESXFile.write(object, options);
-	return buffer;
+function write(esx, options) {
+	return ESXFile.write(esx, options);
 }
 
 module.exports = {

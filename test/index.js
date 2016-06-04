@@ -8,6 +8,8 @@ var utils = require('./test_utils');
 
 var electribe = require('../index');
 
+var TESTFILE = 'data/ESX-Factory-Data.esx';
+
 // function findSampleByName(name, samples) {
 // 	for (var i=0; i<samples.length; i++) {
 // 		if (!samples[i])
@@ -106,8 +108,6 @@ test('ESX1: Utils.uintFromBits', function(t) {
 	t.end();
 });
 
-var TESTFILE = 'data/ESX-Factory-Data.esx';
-
 test('ESX1: Basic read-write', function(t) {
 	t.ok('esx1' in electribe, 'ESX1 module exists');
 	var esx = electribe.esx1;
@@ -124,6 +124,46 @@ test('ESX1: Basic read-write', function(t) {
 		var verification = esx.write(result, { blocksize: 1024 * 1024 * 2 });
 		t.ok(verification, 'Write OK');
 		t.deepEquals(buffer, verification, 'Input matches output');
+		t.end();
+	});
+});
+
+test('ESX1: Rewriting samples', function(t) {
+	t.ok('esx1' in electribe, 'ESX1 module exists');
+	var esx = electribe.esx1;
+
+	fs.readFile(TESTFILE, function(err, buffer) {
+		if (err) {
+			t.skip('No ESX test data found: ' + TESTFILE);
+			t.end();
+			return;
+		}
+
+		var result = esx.parse(buffer);
+		t.ok(result, 'Parse OK');
+
+		var originalOrder = [];
+		var samples = result.sampledata.samples;
+		for (var i = 0; i < samples.length; ++i) {
+			var waveData = samples[i];
+			originalOrder.push(waveData ? waveData.sample.name.value : null);
+		}
+
+		result.sampledata.save();
+
+		var output = esx.write(result, { blocksize: 1024 * 1024 * 2 });
+		t.ok(output, 'Write OK');
+		var reparsed = esx.parse(output);
+		t.ok(reparsed, 'Parse OK');
+
+		var order = [];
+		var samples = reparsed.sampledata.samples;
+		for (var i = 0; i < samples.length; ++i) {
+			var waveData = samples[i];
+			order.push(waveData ? waveData.sample.name.value : null);
+		}
+
+		t.deepEquals(originalOrder, order, 'Sample order OK');
 		t.end();
 	});
 });
